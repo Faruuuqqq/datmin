@@ -1,0 +1,72 @@
+TUGAS PROYEK UTS DATA MINING
+
+
+Program Studi	: S1 Teknik Informatika
+Mata Kuliah		: Data Mining
+Sifat Tugas		: Kelompok (maksimal 5 Mahasiswa)
+Waktu Pengerjaan	: Tiga Minggu
+Batas Pengumpulan	: Pertemuan 8 (Sesi UTS)
+
+Tema:
+Analisis Karakteristik Data Sensor Industrial/Geotermal Multivariat dan Pemodelan Klasterisasi Deret Waktu 
+
+1. Deskripsi Tugas dan Latar Belakang
+Pemantauan sistem operasional berbasis data sensor industrial/geotermal menghasilkan data deret waktu multivariat (multivariate time-series) berdimensi tinggi tanpa label (unlabeled data). Pengolahan data jenis ini memiliki tantangan teknis spesifik yang wajib dianalisis:
+Ketimpangan skala (scale disparity): Perbedaan rentang nilai antar-sensor (misalnya: suhu bernilai ratusan versus rasio gas bernilai desimal) membiaskan perhitungan jarak berbasis Euclidean.
+Ketergantungan waktu (temporal dependency): Urutan waktu antar-rekaman saling terikat
+Noise & outliers: Keberadaan data kosong (missing values) atau outlier akibat gangguan instrumen pemantauan (opsional dan bernilai bonus jika diselesaikan)
+
+2. Spesifikasi dan Pilihan Dataset Publik
+Setiap kelompok wajib memilih satu dataset publik bertipe multivariate time-series data sensor industrial/geotermal dengan kriteria: memiliki minimal lima atribut numerik kontinu, memiliki perbedaan skal, serta tidak memiliki label klaster (unlabeled).
+
+3. Ketentuan Pemrosesan Deret Waktu (Time-Series Handling)
+Dapat mempertahankan karakteristik temporal, akan menjadi nilai bonus untuk setiap kelompok.  
+
+4. Tahapan Pengerjaan Proyek (3 Minggu)
+Tahap 1: Business Understanding & Literature Selection (PRISMA)
+Menyaring literatur menggunakan diagram alir PRISMA hingga tersisa min 8 paper acuan utama.
+Menyusun Tabel Gap Analysis untuk menentukan kontribusi teknik pengolahan data kelompok.
+
+
+Langkah-langkah Menggunakan PRISMA
+Identifikasi
+Peneliti menentukan strategi pencarian dengan merumuskan kata kunci utama, rentang waktu publikasi, dan database yang akan digunakan. Tahap ini penting untuk menjamin keluasan cakupan literatur. Contoh: pencarian dilakukan di Scopus dengan kata kunci “YOLO object detection AND UAV” antara tahun 2015–2025.
+Screening
+Hasil pencarian awal biasanya menghasilkan ratusan hingga ribuan artikel. Tahap ini melibatkan penghapusan duplikasi, pengecekan akses, dan peninjauan awal. Biasanya peninjauan dilakukan terhadap judul serta abstrak untuk menyingkirkan artikel yang tidak relevan.
+Eligibility
+Artikel yang tersisa kemudian dibaca secara penuh (full-text review) untuk menilai kesesuaian dengan kriteria inklusi (misalnya topik, metode, bahasa, atau konteks penelitian). Artikel yang tidak memenuhi kriteria akan dikeluarkan dengan alasan yang jelas.
+Inclusion
+Tahap akhir adalah penetapan artikel yang benar-benar digunakan untuk analisis dan sintesis hasil. Jumlah akhir ini akan dicatat dalam PRISMA Flow Diagram.
+
+Tahap 2: Data Understanding & Preprocessing Plan
+Analisis taksonomi dan skala: Mengidentifikasi statistik deskriptif (mean, std, skewness) dll
+Analisis korelasi dan outlier: Membuat matriks korelasi antar-sensor dan visualisasi sebaran (boxplot atau scatter plot) untuk deteksi pencilan.
+
+Tahap 3: Time-Series Clustering Design & Paper Finalization
+Merancang algoritma klasterisasi
+Merancang teknik optimasi hiperparameter (misalnya: Elbow Method untuk menentukan jumlah klaster).
+Menentukan metrik evaluasi internal klaster (Silhouette Coefficient atau Davies-Bouldin Index).
+
+5. Luaran dan Sistematika Penulisan Paper UTS
+Luaran Wajib
+File Paper Proyek UTS format .doc (5–8 halaman, format IEEE dua kolom- https://www.ieee.org/conferences/publishing/templates).
+Lampiran berupa tautan repositori kode (GitHub/Google Colab), dataset, dan diagram alir PRISMA.
+NB: Perlu melampirkan deklarasi penggunaan Gen-AI 
+
+Sistematika Penulisan Paper
+Judul: Menggambarkan domain data sensor, jumlah atribut multivariat, dan algoritma Clustering yang dipilih.
+BAB I Pendahuluan: Permasalahan data sensor multivariat, Diagram Alir PRISMA, Tabel Gap Analysis, dan Pernyataan Kontribusi Kelompok.
+BAB II Metodologi Preprocessing & Pemodelan: Teknik penanganan data, formulasi algoritma klasterisasi, dan rancangan evaluasi klaster.
+Bab III Hasil
+Bab IV Kesimpulan dan saran
+Daftar Pustaka: Minimal 8 rujukan paper utama hasil seleksi PRISMA (menggunakan format IEEE).
+
+
+
+
+
+
+
+
+
+

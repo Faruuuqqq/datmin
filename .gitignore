@@ -1,0 +1,19 @@
+# Large raw data - host via Kaggle Dataset, not git
+dataset/*.csv
+dataset/*.parquet
+*.parquet
+*.csv
+
+# Kaggle / Colab outputs
+/kaggle/
+figures/*.png
+figures/*.pdf
+__pycache__/
+.ipynb_checkpoints/
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Python
+.venv/
+venv/
+*.pyc
