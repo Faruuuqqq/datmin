@@ -1,6 +1,6 @@
 # DRAFT PAPER IEEE — Impact of Feature Scaling and Temporal Window Aggregation on Multivariate Geothermal Drilling Sensor Clustering Using K-Means
 
-> Status: DRAF 30 Sep 2026 untuk template IEEE dua kolom (5–8 hlm). Angka bertanda [TODO-RUN] diisi setelah `notebooks/04_clustering.ipynb` dieksekusi. Semua angka lain RIIL (Colab 200k + PRISMA terkunci). Konversi ke .doc via template https://www.ieee.org/conferences/publishing/templates.
+> Status: DRAF 30 Sep 2026 untuk template IEEE dua kolom (5–8 hlm). Angka bertanda [TODO-RERUN] diisi setelah notebook fathan yang sudah diperbaiki di-run ulang di Kaggle. Rincian Tahap 2/3: `tahap2_final.md`, `tahap3_final.md`. Konversi ke .doc via template https://www.ieee.org/conferences/publishing/templates.
 
 ---
 
@@ -10,7 +10,7 @@
 
 ## Abstract
 
-*Unsupervised monitoring of geothermal drilling rigs requires clustering high-frequency multivariate sensor streams without labels. The Utah FORGE Well 56-32 dataset (2,506,360 records at 1 Hz, 8 sensors) exhibits three technical diseases: scale disparity (range ratio 258.9:1), temporal dependency (autocorrelation ≈ 1.0 at lag-1), and instrument noise (sentinel −999.25, 8.65% IQR outliers in ROP). A PRISMA-guided review (740 → 175 → 127 → 70 → 9 included studies) shows prior work either needs labels, uses single sensors, or ignores scaler–window interaction. We compare StandardScaler vs RobustScaler × point-based vs 60-s sliding-window (mean/std/delta) representations under K-Means (k = 2–8), evaluated by Silhouette coefficient and Davies–Bouldin index with elbow selection. [TODO-RUN: 1–2 kalimat hasil — skenario terbaik + Sil/DBI + pemetaan 4 rezim rig.]*
+*Unsupervised monitoring of geothermal drilling rigs requires clustering high-frequency multivariate sensor streams without labels. The Utah FORGE Well 56-32 dataset (2,506,360 records at 1 Hz, 8 sensors) exhibits three technical diseases: scale disparity (range ratio 258.9:1), temporal dependency (autocorrelation ≈ 1.0 at lag-1), and instrument noise (sentinel −999.25, 8.65% IQR outliers in ROP). A PRISMA-guided review (740 → 175 → 127 → 70 → 9 included studies) shows prior work either needs labels, uses single sensors, or ignores scaler–window interaction. We compare StandardScaler vs RobustScaler × point-based vs 60-s sliding-window (mean/std/delta) representations under K-Means (k = 2–8), evaluated by Silhouette coefficient and Davies–Bouldin index with elbow selection. Initial runs show RobustScaler dominates (Sil 0.966 vs 0.627), k = 4 selected on domain grounds (four rig regimes), and window-vs-point plus final centroids await a corrected re-run (ROP winsorized, Diff Press excluded).*
 
 **Keywords:** geothermal drilling; multivariate time series; K-means clustering; feature scaling; sliding window; Silhouette; Davies-Bouldin; Utah FORGE.
 
@@ -95,17 +95,19 @@ Elbow inertia untuk k; **Silhouette** $s(i)$ [S3] (maksimum) dan **Davies–Boul
 - Sentinel & outlier: §I-A. Heatmap korelasi + boxplot (lampiran gambar).
 - Keputusan: Diff Press dipisahkan; ROP di-winsorize; RobustScaler hipotesis unggul (menunggu §III-B).
 
-### B. Clustering Experiments ([TODO-RUN] — rancangan terkunci di `04_clustering.ipynb`)
+### B. Clustering Experiments (RIIL run awal fathan + [TODO-RERUN] pasca-perbaikan kode)
 
-- Tabel: inertia/Silhouette/DBI per (skenario × k) + kurva elbow.
-- Klaim yang diuji: window60-robust k=4 optimal; centroid → 4 rezim fisik; PCA-2D visual.
-- [TODO-RUN: isi angka + 3 gambar: elbow/silhouette, PCA clusters, tabel centroid.]
+- Scaler demo k=4: Robust **Sil 0.9658/DBI 0.2456** vs Standard 0.6272/0.6253 vs unscaled 0.8973/0.2765 → Robust menang telak; unscaled menipu (massa nol).
+- Window vs point k=4: point **0.9215** vs window-60 s **0.8486** → dilaporkan jujur; window belum terbukti unggul di head-segment (999 window, dominan idle). Menunggu re-run full-range + DBI.
+- Elbow k=2–8: Robust stabil ≥0.91 semua k; Standard jatuh di k≥7 (0.54); BEST_K=4 dipilih BERBASIS DOMAIN (4 rezim Coley), bukan puncak elbow (datar). Penuh di `tahap3_final.md:§3.4`.
+- Centroid run awal BELUM layak tafsir (cluster 0: ROP 109 + SPP 0.39 = tidak fisik) → [TODO-RERUN] tabel centroid + share + PCA-2D setelah winsorize + Diff Press OFF.
+- Gambar: elbow/silhouette (`fig5`), PCA (`fig6`), korelasi (`fig1`), boxplot (`fig2`) — unduh dari output Kaggle ke `figures/`.
 
 ---
 
 ## IV. Conclusion and Future Work
 
-[TODO: 1 paragraf kesimpulan setelah §III-B terisi + saran: online/streaming clustering, GMM/DBSCAN comparison, Diff Press reintegration.]
+Robust scaling resolves the 258.9:1 disparity that standard scaling cannot; regime discovery proceeds label-free where prior supervised work needs labels. Window representation and final centroids remain open pending the corrected re-run. Future work: streaming clustering, GMM/DBSCAN comparison, Diff Press reintegration, full-range (non-head) sampling. [FINALISASI setelah TODO-RERUN.]
 
 ---
 
@@ -134,4 +136,4 @@ Elbow inertia untuk k; **Silhouette** $s(i)$ [S3] (maksimum) dan **Davies–Boul
 - [ ] Konversi file ini ke .doc template IEEE dua kolom.
 - [ ] Tautan repo kode + dataset Kaggle (`faruqmahdison/utah-datmin`) + diagram PRISMA (`prisma.restart.v6.md:§4`).
 - [ ] `deklarasi_genai.md` + 7 CSV/MD jejak (`screening-175paper.csv`, `screening_work.csv`, `sought_list.csv`, `screening_127.csv`, `eligibility_16.csv`, `tabel_final_backup.md`).
-- [ ] [TODO-RUN] §III-B + Abstrak + §IV setelah eksekusi notebook.
+- [ ] [TODO-RERUN] angka centroid/DBI/share final + 4 gambar Kaggle (`fig1/fig2/fig5/fig6`) ke `figures/` setelah re-run notebook fathan.
