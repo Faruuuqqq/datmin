@@ -199,4 +199,4 @@ Kalimat jadi untuk paper:
 - `... (2).md:66-163` diagram masih pakai `1.790→826→688→84→8` — itu versi lama Pilar 2. Jika mau konsisten 1.074→8, **ganti diagram dengan ASCII §6b di atas** atau buat lampiran terpisah.
 - `... (2).md:122-131` vs `...:143-152` duplikat blok Eligibility (76 vs 62) — hapus salah satu, pakai 164 (sesuai 172-8).
 
-File ini: `reports/prisma.1074.md` — pendamping `prisma.final.md` (728). Pilih salah satu query sebagai diagram utama di laporan final, satunya jadi lampiran bukti keluasan.
+File ini: `reports/99-arsip/prisma.1074.md` — pendamping `prisma.final.md` (728). Pilih salah satu query sebagai diagram utama di laporan final, satunya jadi lampiran bukti keluasan.

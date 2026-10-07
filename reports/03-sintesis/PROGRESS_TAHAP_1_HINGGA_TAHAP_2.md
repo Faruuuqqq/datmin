@@ -288,7 +288,7 @@ Seluruh berkas luaran tersusun rapi di dalam repositori dan siap diuji:
 | **4** | `figures/fig1_correlation_matrix_pearson_spearman.png` | Visual (300 DPI) | Selesai | Visualisasi heatmap korelasi linier dan peringkat antar-sensor rig. |
 | **5** | `figures/fig2_outlier_and_scale_distribution.png` | Visual (300 DPI) | Selesai | Visualisasi boxplot disparitas skala dan pencilan tarikan derek ROP. |
 | **6** | `LITERATURE_REVIEW_DAN_GAP_ANALYSIS.md` | 36,7 KB | Selesai | Dokumentasi komprehensif sintesis 16 paper, 4 RQ, dan gap analysis. |
-| **7** | `reports/prisma.restart.v6.md` | 18,4 KB | Selesai | Log rinci penelusuran Scopus 740 $\to$ 175 $\to$ 9 naskah PRISMA 2020. |
+| **7** | `reports/01-protokol-prisma/prisma.restart.v6.md` | 18,4 KB | Selesai | Log rinci penelusuran Scopus 740 $\to$ 175 $\to$ 9 naskah PRISMA 2020. |
 | **8** | `LAPORAN_TAHAP_2_PREPROCESSING_DAN_EDA.md` | 24,5 KB | Selesai | Laporan teknis lengkap pra-pemrosesan, EDA, taksonomi, dan windowing. |
 | **9** | `conference_101719.tex` | 22,7 KB | On-Progress | Naskah draft paper ilmiah format IEEE 2-kolom (Bab I, II, dan III siap). |
 

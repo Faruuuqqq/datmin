@@ -1,0 +1,308 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+% =========================================================================
+% CATATAN KERJA (hapus blok komentar ini sebelum kirim):
+% - Isi nama penulis, email, dan [TIM: tanggal pencarian Scopus].
+% - [TODO-SHOT]: screenshot faset Scopus (331 older-than-2021, 178 non-Article,
+%   20 non-English overlap, 104 inaccessible).
+% - [TODO-RERUN]: centroid/share/DBI final + fig1/fig2/fig4/fig5/fig6 dari
+%   re-run notebook fathan (winsorize ROP, Diff Press OFF).
+% - Fig. 1 memakai prisma-diagram.png (export dari prisma-diagram.drawio tim).
+% - HAPUS komentar template merah bawaan di bawah sebelum submit.
+% =========================================================================
+
+\title{Impact of Feature Scaling and Temporal Window Aggregation on Multivariate Geothermal Drilling Sensor Clustering Using K-Means}
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Nama Anggota 1}
+\IEEEauthorblockA{\textit{Program Studi S1 Teknik Informatika} \\
+\textit{Universitas Padjadjaran}\\
+Sumedang, Indonesia \\
+nama1@mail.unpad.ac.id}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Nama Anggota 2}
+\IEEEauthorblockA{\textit{Program Studi S1 Teknik Informatika} \\
+\textit{Universitas Padjadjaran}\\
+Sumedang, Indonesia \\
+nama2@mail.unpad.ac.id}
+\and
+\IEEEauthorblockN{3\textsuperscript{rd} Nama Anggota 3}
+\IEEEauthorblockA{\textit{Program Studi S1 Teknik Informatika} \\
+\textit{Universitas Padjadjaran}\\
+Sumedang, Indonesia \\
+nama3@mail.unpad.ac.id}
+\and
+\IEEEauthorblockN{4\textsuperscript{th} Nama Anggota 4}
+\IEEEauthorblockA{\textit{Program Studi S1 Teknik Informatika} \\
+\textit{Universitas Padjadjaran}\\
+Sumedang, Indonesia \\
+nama4@mail.unpad.ac.id}
+\and
+\IEEEauthorblockN{5\textsuperscript{th} Nama Anggota 5}
+\IEEEauthorblockA{\textit{Program Studi S1 Teknik Informatika} \\
+\textit{Universitas Padjadjaran}\\
+Sumedang, Indonesia \\
+nama5@mail.unpad.ac.id}
+}
+
+\maketitle
+
+\begin{abstract}
+Pengeboran geotermal pada granit kristalin keras berbiaya puluhan ribu dolar per hari, sementara pencatatan status rig manual lambat, subjektif, dan diskontinu. Data sensor rig multivariat berfrekuensi tinggi umumnya tanpa label sehingga menuntut klasterisasi unsupervised yang tahan disparitas skala, dependensi temporal, dan noise instrumen. Mengikuti CRISP-DM, kajian ini memprofilkan dataset Utah FORGE Well 56-32 \cite{benaoun2022} (2.506.359 rekaman 1 Hz, 22 kolom menjadi 8 sensor, nol duplikat eksak): disparitas skala 258,9:1, autokorelasi temporal $\approx$ 1,0 pada lag-1, sentinel $-999{,}25$, dan outlier ROP 8,65\%. Tinjauan berpedoman PRISMA atas Scopus (740 $\rightarrow$ 409 $\rightarrow$ 231 $\rightarrow$ 127 $\rightarrow$ 9 studi) menjawab tiga pertanyaan penelitian: preprocessing apa yang menyelesaikan penyakit data sensor (RQ1), metode clustering dan evaluasi apa yang cocok untuk deret 1 Hz unlabeled (RQ2), dan pipeline final apa yang dipakai (RQ3). Sintesis menunjukkan normalisasi dipakai 4/9 studi, sliding-window 4/9, K-Means eksplisit 2/9, elbow 2/9, dan Silhouette/DBI 1/9. Eksperimen terkontrol membandingkan StandardScaler vs RobustScaler $\times$ point-based vs sliding-window 60 detik (mean/std/delta) pada K-Means (k = 2--8): RobustScaler dominan (Sil 0,966 vs 0,627), k = 4 dipilih atas dasar domain (empat rezim rig); perbandingan window-vs-point dan centroid final menunggu re-run terkoreksi (ROP di-winsorize, Diff Press dikeluarkan).
+\end{abstract}
+
+\begin{IEEEkeywords}
+geothermal drilling, multivariate time series, K-means clustering, feature scaling, sliding window, Silhouette, Davies-Bouldin, Utah FORGE, CRISP-DM
+\end{IEEEkeywords}
+
+\section{PENDAHULUAN}
+
+Pengeboran sumur panas bumi pada formasi granit kristalin keras seperti Utah FORGE (Frontier Observatory for Research in Geothermal Energy) menuntut pemantauan multivariat surface sensor berkecepatan tinggi (1 Hz). Tiga tantangan teknis wajib diselesaikan sebelum klasterisasi: (1) ketimpangan skala antar-sensor yang membiaskan jarak Euclidean, (2) ketergantungan temporal antar-rekaman, dan (3) noise serta outlier instrumen. Kajian ini dipandu tiga pertanyaan penelitian:
+
+\begin{itemize}
+\item \textbf{RQ1 (Preprocessing penyakit data):} teknik preprocessing apa yang dipakai literatur untuk disparitas skala, missing value, dan outlier pada sensor multivariat, dan mana yang transferable ke 8 sensor 1 Hz kami?
+\item \textbf{RQ2 (Metode clustering dan evaluasi):} metode clustering dan metrik evaluasi internal apa yang cocok untuk deret waktu unlabeled, dan mengapa K-Means dipilih sebagai baseline?
+\item \textbf{RQ3 (Pipeline final):} kombinasi preprocessing $\times$ clustering $\times$ evaluasi apa yang dirancang untuk dataset Utah FORGE 56-32?
+\end{itemize}
+
+Kontribusi kami: (1) karakteristik data lengkap 7 dimensi hasil ukur; (2) sintesis kuantitatif 9 studi (sebaran metode + tabel adopsi/penolakan); (3) pipeline terkontrol scaler$\times$window pada K-Means dengan evaluasi elbow--Silhouette--DBI dan pemetaan 4 rezim rig.
+
+\subsection{Seleksi Literatur (PRISMA 2020)}
+
+Query resmi Scopus empat blok (domain + data + metode + preprocessing) + PUBYEAR 2021--2026 + OA/journal/English/article menghasilkan \textbf{127 dokumen} (query mentah tanpa filter: 740 sebagai bukti keluasan):
+
+{\footnotesize
+\begin{verbatim}
+TITLE-ABS-KEY((geothermal OR drill*
+OR wellbore* OR borehole* OR rig
+OR "rate of penetration"
+OR "weight on bit" OR "rig state*"
+OR petro* OR "oil and gas")
+AND ("time series" OR "time-series"
+OR temporal OR multivariate
+OR sensor* OR "sensor data"
+OR "sensor signal*"
+OR "high-frequency" OR unlabeled)
+AND (clust* OR "k-means" OR "k means"
+OR "fuzzy c-means" OR DBSCAN OR GMM
+OR "gaussian mixture" OR "k-shape*"
+OR "pattern recognition"
+OR "anomaly detection")
+AND (normali* OR scal* OR preprocess*
+OR "feature extraction"
+OR "feature engineering"
+OR "sliding window*" OR outlier*
+OR denoising))
+AND PUBYEAR > 2020 AND PUBYEAR < 2027
+\end{verbatim}
+}
+
+Alur: \textbf{740 diskrining $\rightarrow$ 331 lebih tua dari 2021 $\rightarrow$ 409 diminta $\rightarrow$ eksklusi (Non-English 20* + Non-Article 178*) $\rightarrow$ 231 artikel Inggris $\rightarrow$ 104 tak terakses $\rightarrow$ 127 akses penuh = dinilai $\rightarrow$ 118 dieksklusi (Pass-1 57 + tak-terambil/standby 45 + Pass-2 16) $\rightarrow$ 9 studi disertakan} (syarat $\geq$ 8 TERLAMPUI). *20 non-English overlap di dalam 178 (unik 178; 409$-$178=231 --- verifikasi screenshot faset [TODO-SHOT]). Screening manual tanpa otomasi; jejak di \texttt{screening\_work.csv}.
+
+\begin{figure}[!t]
+\centering
+% Ekspor prisma-diagram.drawio tim ke prisma-diagram.png, sejajarkan dgn file .tex ini.
+\includegraphics[width=\columnwidth]{prisma-diagram.png}
+\caption{Diagram alir seleksi studi PRISMA (740 $\rightarrow$ 409 $\rightarrow$ 231 $\rightarrow$ 127 $\rightarrow$ 9). Tanggal pencarian: [TIM].}
+\label{fig:prisma}
+\end{figure}
+
+\subsection{Ekstraksi Literatur (Data Charting)}
+
+Sembilan studi diekstraksi ke Tabel~\ref{tab:charting} dengan kolom: bentuk data, preprocessing, clustering/evaluasi, dan relevansi terhadap Utah FORGE. Hasil charting menjadi dasar jawaban RQ1 (Seksi III-A), RQ2 (Seksi III-B), dan pipeline final RQ3 (Seksi III-C).
+
+\begin{table*}[!t]
+\caption{Ekstraksi Literatur 9 Studi Inti}
+\label{tab:charting}
+\setlength{\tabcolsep}{3pt}
+\centering
+\small
+\begin{tabular}{p{0.5cm}p{2.4cm}p{3.0cm}p{3.4cm}p{3.2cm}p{2.7cm}}
+\toprule
+\textbf{No.} & \textbf{Studi} & \textbf{Bentuk Data} & \textbf{Preprocessing} & \textbf{Clustering / Evaluasi} & \textbf{Relevansi FORGE} \\
+\midrule
+1 & Geothermal clustering \cite{geo2026} & Deret plant temp/flow geothermal & Seleksi 13/1588 fitur self-supervised & 9 algos k-Means/GMM/DBSCAN; SIL 0,66, DBI 0,40 & Jangkar metode + metrik; gap: tanpa scaler$\times$window \\
+2 & Drilling optimization + window \cite{plos2026} & 7.231 sampel 4 sumur WOB/RPM/torque/flow/ROP & Imputasi RF, fusi 3S/K-means/LOF, Savitzky-Golay, sliding window & Optimasi RF supervised | Akurasi ROP & Preseden window + denoising; gap: butuh label \\
+3 & Wellbore unsupervised AE \cite{frai2026} & 1 sumur, 12 log depth-series & Interpolasi + normalisasi + window-50 & LSTM-GNN unsupervised | recon err, F1 & Preseden normalisasi + window; gap: tanpa banding scaler \\
+4 & STADe ICPS \cite{ijcip2025} & Packet trace wellhead & Sliding window + fitur periodisitas & STADe vs KNN/IF/LOF | F1 0,97 & Preseden window unsupervised; gap: bukan sensor fisik \\
+5 & Geothermal steam SSA \cite{engproc2025} & 9 sumur, steam 5-mnt 14 thn & Butterworth denoise + NMS & SSA anomaly | F1/ROC/PR & Domain geothermal; gap: univariat \\
+6 & 3W Petrobras DNN \cite{geoen2024} & 21 sumur offshore multivariat & ffill + standardise + downsample + window-30 + SMOTE & DNN supervised | F1 0,97 & Benchmark industri; gap: butuh label \\
+7 & Permian profiles \cite{eee2026} & 189 sumur + completion & Completion-norm + MRMR/VIF/RFE & RF + elbow/CH k=2 | acc & Preseden elbow; gap: fitur statis \\
+8 & Drilling AE segmentation \cite{jamdsm2023} & AE peck drilling lab & CWT time-frequency & DDM MVG vs CAE | maps & Domain drilling; gap: single-sensor lab \\
+9 & Kazakhstan oil-well K-Means \cite{socar2026} & $>$3 jt entri harian oil/liquid/water-cut & Normalization + outlier + korelasi & K-means + Elbow K=10 & Jangkar K-Means + elbow kedua; gap: agregat harian \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{HASIL DAN PEMBAHASAN}
+
+\subsection{Analisis RQ1: Preprocessing Penyakit Data}
+
+\noindent\textbf{RQ1:} \textit{Teknik preprocessing apa yang menyelesaikan disparitas skala, missing value, dan outlier sensor multivariat, dan mana yang transferable?}
+
+\begin{table}[!t]
+\caption{Sebaran Preprocessing pada 9 Studi (satu studi bisa >1 teknik)}
+\label{tab:sebaran-pre}
+\centering
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{3.4cm}p{1.0cm}p{2.9cm}}
+\toprule
+\textbf{Teknik} & \textbf{n/9} & \textbf{Studi} \\
+\midrule
+Normalisasi/scaling & 4 & \cite{frai2026,geoen2024,eee2026,socar2026} \\
+Sliding-window & 4 & \cite{plos2026,frai2026,ijcip2025,geoen2024} \\
+Missing handling (imputasi/ffill/interpolasi) & 3 & \cite{plos2026,frai2026,geoen2024} \\
+Denoising/filter (SG, Butterworth) & 2 & \cite{plos2026,engproc2025} \\
+Seleksi/reduksi fitur & 2 & \cite{geo2026,eee2026} \\
+Outlier eksplisit (LOF, 3S, handling) & 2 & \cite{plos2026,socar2026} \\
+Time-frequency (CWT) & 1 & \cite{jamdsm2023} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Pola: normalisasi + window adalah pasangan dominan (masing-masing 4/9); missing handling selalu dibarengi keduanya. Tak ada studi yang menguji interaksi scaler$\times$window secara faktorial --- celah yang dijawab pipeline kami. \textbf{Catatan jujur:} kami TIDAK memakai fitur frekuensi (FFT/EWT): sinyal mekanik--hidrolik 1 Hz cukup terwakili mean/std/delta, dan baseline time-domain didahulukan; FFT/EWT dicatat sebagai future work.
+
+\textbf{Jawaban RQ1:} normalisasi, sliding-window, dan missing handling adalah paket preprocessing transferable; kami mengadopsinya penuh (Seksi IV-B) plus RobustScaler untuk outlier stick-slip dan winsorize ROP untuk spike kalkulasi.
+
+\subsection{Analisis RQ2: Metode Clustering dan Evaluasi}
+
+\noindent\textbf{RQ2:} \textit{Metode clustering dan metrik evaluasi internal apa yang cocok untuk deret 1 Hz unlabeled, dan mengapa K-Means?}
+
+K-Means eksplisit dipakai 2/9 \cite{geo2026,socar2026}; unsupervised lain (autoencoder, SSA, STADe, shapelet) 4/9; supervised 3/9 (kontras kebutuhan label). Evaluasi: elbow 2/9 \cite{eee2026,socar2026}; Silhouette/DBI hanya 1/9 \cite{geo2026} (definisi formal \cite{rousseeuw1987,davies1979}) --- kombinasi ketiganya sekaligus belum ada yang memakai pada sensor drilling: celah kami.
+
+\begin{table}[!t]
+\caption{Adopsi dan Penolakan Metode (dengan alasan)}
+\label{tab:adopsi}
+\centering
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.0cm}p{1.4cm}p{4.0cm}}
+\toprule
+\textbf{Metode} & \textbf{Nasib} & \textbf{Alasan} \\
+\midrule
+K-Means & DIPAKAI baseline & Elbow + SIL + DBI; murah, interpretabel, jangkar [1][9]; cocok rezim rig diskrit \\
+RobustScaler vs Standard & DIPAKAI faktorial & Outlier stick-slip vs artefak butuh bukti banding \\
+Sliding-window mean/std/delta & DIPAKAI & Preseden [2][3][4][6]; kompensasi autocorr $\approx$1,0 \\
+DBSCAN & DITUNDA & Sensitif eps pada data zero-inflated; future work \\
+GMM / Fuzzy & DITUNDA & Asumsi Gaussian vs skew 37,63; future work \\
+MinMax & DITOLAK & Runtuh oleh spike max 10.771 \\
+PCA & DITUNDA & Varians didominasi SPP; future work \\
+FFT/EWT & DITUNDA & Biaya + baseline time-domain dulu \\
+Autoencoder/LSTM-GNN & DITUNDA & Mahal; K-Means dulu sebagai baseline \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Jawaban RQ2:} K-Means + elbow + Silhouette + DBI adalah paket baseline yang murah, interpretabel, dan label-free; alternatif ditunda dengan alasan tercatat, bukan diabaikan.
+
+\subsection{Pipeline Final (Jawaban RQ3) dan Karakteristik Data}
+
+\noindent\textbf{RQ3:} \textit{Pipeline final apa untuk Utah FORGE 56-32?} Tabel~\ref{tab:karakter} memprofilkan dataset (CRISP-DM Data Understanding); sembilan langkah preparation terurut; Gambar~\ref{fig:evalflow} merancang evaluasi.
+
+\begin{table}[!t]
+\caption{Karakteristik Dataset Utah FORGE 56-32 (7 dimensi, terukur)}
+\label{tab:karakter}
+\centering
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.2cm}p{5.2cm}}
+\toprule
+\textbf{Dimensi} & \textbf{Hasil ukur $\rightarrow$ implikasi} \\
+\midrule
+Volume & 2.506.359 baris 1 Hz, 2021/02/08--2021/03/09 $\rightarrow$ sampel 60--200k + seed 42 \\
+Dimensi & 22 kolom $\rightarrow$ 8 sensor (Gas/Gamma 100\% sentinel, dibuang); syarat $\geq$5 TERPENUHI \\
+Tipe Data & Kontinu rasio (ft/hr, klbs, RPM, psi, kft-lb, GPM); 2 kolom waktu; tanpa label $\rightarrow$ unsupervised valid \\
+Skala & Range ROP 10.771 vs Torque 41,6 = rasio 258,9:1 $\rightarrow$ wajib scaler \\
+Missing & Sentinel $-999{,}25$: SPP/Diff Press 1,17\%, RPM/Torque 0,02\% $\rightarrow$ NaN + dropna-subset \\
+Outlier & ROP 8,65\% (max 10.771 artefak) $\rightarrow$ winsorize HI$\approx$47; Torque/WOB $\approx$2,3\% stick-slip $\rightarrow$ RobustScaler \\
+Duplikasi & \textbf{0 baris duplikat; 0 timestamp ganda} (cek penuh 2,5 jt) $\rightarrow$ tanpa dedup \\
+Tambahan & Skew ROP 37,63; median 5 sensor = 0 (idle); Diff Press mean $-692$ (default OFF); SPP--Pump r=0,925; ROP--WOB r=0,007; autocorr lag-1 $\approx$ 1,0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Preparation (semua langkah, berurutan): (1) seleksi 22$\rightarrow$8 sensor; (2) sentinel$\rightarrow$NaN; (3) \texttt{dropna(subset=SENSORS)}; (4) Diff Press default OFF (\texttt{USE\_DIFF\_PRESS} untuk sensitivitas 8); (5) winsorize ROP di Q3+1,5$\cdot$IQR; (6) \texttt{float32} + \texttt{datetime} + sort; (7) Standard vs Robust scaler; (8) point (8 fitur) vs window-60 dtk/stride-30 dtk mean/std/delta (24 fitur) \cite{keogh2005,aghabozorgi2015}; (9) sampling + seed 42, subsampel metrik 20k, PCA-2D 15k.
+
+Modeling: minimasi $J = \sum_{j=1}^{k}\sum_{x_i \in C_j} \lVert x_i - \mu_j \rVert^2$ (Euclidean; Lloyd \cite{lloyd1982}); grid k = 2--8, n\_init = 10; empat skenario point-standard, point-robust, window60-standard, window60-robust.
+
+\begin{figure}[!t]
+\centering
+\begin{small}
+\begin{verbatim}
+4 skenario: point/window60 x Standard/Robust
+ -> grid k = 2..8, n_init 10, seed 42, subsampel 20k
+ -> Elbow (inertia vs k)
+ -> Silhouette maksimum + DBI minimum
+ -> BEST_K + cek domain 4 rezim rig
+ -> refit + centroid fisik + share + PCA-2D
+\end{verbatim}
+\end{small}
+\caption{Flowchart rancangan evaluasi klaster internal tanpa label.}
+\label{fig:evalflow}
+\end{figure}
+
+\subsection{Hasil Eksperimen}
+
+Deskriptif (200k, seed 42): ROP mean 24,91/max 10.771; SPP mean 1.209/max 5.239; Torque mean 2,15/max 41,6. Heatmap, boxplot, trace temporal [TODO-RERUN: \texttt{fig1/fig2/fig4}].
+
+\begin{table}[!t]
+\caption{Elbow Silhouette k=2--8 (run awal, 60k sampel)}
+\label{tab:elbow}
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{k} & \textbf{pt-robust} & \textbf{pt-std} & \textbf{win-robust} & \textbf{win-std} \\
+\midrule
+2 & 0,9523 & 0,7177 & 0,9404 & 0,7100 \\
+3 & 0,9314 & 0,6191 & 0,9451 & 0,7066 \\
+4 & 0,9145 & 0,6506 & 0,9456 & 0,6965 \\
+5 & 0,9176 & 0,6916 & 0,9333 & 0,6978 \\
+6 & 0,9291 & 0,6962 & 0,9364 & 0,6936 \\
+7 & 0,9306 & 0,6952 & 0,9239 & 0,5488 \\
+8 & 0,9301 & 0,7146 & 0,9182 & 0,5461 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Scaler demo k=4: Robust \textbf{Sil 0,9658/DBI 0,2456} vs Standard 0,6272/0,6253 vs unscaled 0,8973/0,2765. Window vs point: point \textbf{0,9215} vs window-60 dtk \textbf{0,8486} (dilaporkan jujur; menunggu re-run + DBI). Robust stabil $\geq$0,91 semua k; Standard jatuh di k$\geq$7. BEST\_K = 4 berbasis domain 4 rezim (elbow datar). Centroid run awal belum fisik (ROP 109 + SPP 0,39) [TODO-RERUN: centroid/share/PCA + \texttt{fig5/fig6}].
+
+\section{KESIMPULAN DAN SARAN}
+
+Robust scaling menyelesaikan disparitas 258,9:1; regime discovery label-free menutup gap paper supervised; paket preprocessing RQ1 dan baseline K-Means RQ2 terjawab dengan bukti ukur. Window dan centroid final menunggu re-run terkoreksi. Saran: streaming clustering, perbandingan GMM/DBSCAN, reintegrasi Diff Press, sampling full-range. [FINALISASI setelah TODO-RERUN.]
+
+\section*{Deklarasi Penggunaan Generative AI}
+
+[Diisi tim: alat (opencode/Gemini) dan peran (screening awal, ekstraksi, draf, format); verifikasi data, keputusan seleksi, dan final seluruhnya oleh anggota tim. Lihat \texttt{reports/deklarasi\_genai.md}.]
+
+\begin{thebibliography}{9}
+\bibitem{geo2026} Feature-based time series clustering for efficient labelling of geothermal data, \emph{Geothermics}, 2026, doi: 10.1016/j.geothermics.2026.103656.
+\bibitem{plos2026} Research on an intelligent drilling parameter optimization method using sliding window segmentation, \emph{PLOS ONE}, 2026, doi: 10.1371/journal.pone.0339324.
+\bibitem{frai2026} Unsupervised deep learning framework for early detection of wellbore trajectory deviation, \emph{Front. Artif. Intell.}, 2026, doi: 10.3389/frai.2026.1942787.
+\bibitem{ijcip2025} STADe: unsupervised time-windows anomaly detection in oil \& gas ICPS, \emph{Int. J. Crit. Infrastruct. Prot.}, 2025, doi: 10.1016/j.ijcip.2025.100762.
+\bibitem{engproc2025} Anomaly Detection in Geothermal Steam Production Time Series Using SSA, \emph{Eng. Proc.}, 2025, doi: 10.3390/engproc2025107024.
+\bibitem{geoen2024} Oil and gas flow anomaly detection on offshore naturally flowing wells, \emph{Geoenergy Sci. Eng.}, 2024, doi: 10.1016/j.geoen.2024.213240.
+\bibitem{eee2026} ML workflow for classifying production profiles in unconventional reservoirs, \emph{Energy Explor. Exploit.}, 2026, doi: 10.1177/01445987261433779.
+\bibitem{jamdsm2023} Tool condition monitoring by anomaly segmentation using AE in small hole drilling, \emph{J. Adv. Mech. Des. Syst.}, 2023, doi: 10.1299/jamdsm.2023jamdsm0034.
+\bibitem{socar2026} Clustering analysis for predictive maintenance of oil wells in Kazakhstan, \emph{SOCAR Proc.}, 2026, doi: 10.5510/OGP20260101153.
+\bibitem{benaoun2022} M. A. Ben Aoun and T. Madar\'{a}sz, ROP prediction Utah FORGE, \emph{Energies}, 2022, doi: 10.3390/en15124288. (Background, outside PRISMA count.)
+\bibitem{lloyd1982} S. Lloyd, Least squares quantization in PCM, \emph{IEEE Trans. Inf. Theory}, 1982.
+\bibitem{rousseeuw1987} P. J. Rousseeuw, Silhouettes, \emph{J. Comput. Appl. Math.}, 1987, doi: 10.1016/0377-0427(87)90125-7.
+\bibitem{davies1979} D. L. Davies and D. W. Bouldin, A cluster separation measure, \emph{IEEE TPAMI}, 1979, doi: 10.1109/TPAMI.1979.4766909.
+\bibitem{keogh2005} E. Keogh and J. Lin, Clustering of time-series subsequences is meaningless, \emph{Knowl. Inf. Syst.}, 2005, doi: 10.1007/s10115-004-0172-7.
+\bibitem{aghabozorgi2015} S. Aghabozorgi \emph{et al.}, Time-series clustering---a decade review, \emph{Inf. Syst.}, 2015, doi: 10.1016/j.is.2015.04.007.
+\end{thebibliography}
+
+\color{red}
+IEEE conference templates contain guidance text for composing and formatting conference papers. Please ensure that all template text is removed from your conference paper prior to submission to the conference. Failure to remove the template text from your paper may result in your paper not being published.
+
+\end{document}

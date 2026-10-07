@@ -18,14 +18,14 @@ geotermal 1 Hz tanpa label — komparasi **StandardScaler vs RobustScaler** ×
 
 | Tahap | Isi | File |
 |---|---|---|
-| PRISMA (Tahap 1) | Query Q-RAW v6 (740) → Q-FILTERED (175) → screening 127 → sought 70 → **inklusi 9** | `reports/prisma.restart.v6.md`, `reports/prisma.diagram.md` |
-| Screening jejak | Export Scopus, vote Pass-1/Pass-2, sought, eligibility | `reports/screening-*.csv`, `reports/sought_list.csv`, `reports/eligibility_16.csv` |
-| Final + backup | Tabel 9 final + 7 backup + supporting refs | `reports/tabel_final_backup.md` |
-| EDA (Tahap 2) | Taksonomi, deskriptif, sentinel/outlier, korelasi, preprocessing plan | `reports/tahap2_final.md` |
-| Clustering (Tahap 3) | Desain 4 skenario × k=2–8, hasil elbow real, limitasi jujur | `reports/tahap3_final.md` |
-| Paper | Draft IEEE (Bab I–IV + pustaka) | `reports/draft_paper_ieee.md` |
+| PRISMA (Tahap 1) | Query Q-RAW v6 (740) → Q-FILTERED (175) → screening 127 → sought 70 → **inklusi 9** | `reports/01-protokol-prisma/prisma.restart.v6.md`, `reports/01-protokol-prisma/prisma.diagram.md` |
+| Screening jejak | Export Scopus, vote Pass-1/Pass-2, sought, eligibility | `reports/02-data-screening/screening-*.csv`, `reports/02-data-screening/sought_list.csv`, `reports/02-data-screening/eligibility_16.csv` |
+| Final + backup | Tabel 9 final + 7 backup + supporting refs | `reports/02-data-screening/tabel_final_backup.md` |
+| EDA (Tahap 2) | Taksonomi, deskriptif, sentinel/outlier, korelasi, preprocessing plan | `reports/03-sintesis/tahap2_final.md` |
+| Clustering (Tahap 3) | Desain 4 skenario × k=2–8, hasil elbow real, limitasi jujur | `reports/03-sintesis/tahap3_final.md` |
+| Paper | Draft IEEE (Bab I–IV + pustaka) | `reports/04-paper/draft_paper_ieee.md` |
 | Diagram | Generator + PNG/PDF/SVG | `src/generate_prisma.py`, `figures/` |
-| Gen-AI | Deklarasi penggunaan AI (wajib tugas) | `reports/deklarasi_genai.md` |
+| Gen-AI | Deklarasi penggunaan AI (wajib tugas) | `reports/04-paper/deklarasi_genai.md` |
 
 ## Cara jalan
 

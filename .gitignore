@@ -3,11 +3,15 @@ dataset/*.csv
 dataset/*.parquet
 *.parquet
 *.csv
+# ...tapi CSV jejak PRISMA di reports/ wajib ke-track
+!reports/**/*.csv
 
 # Kaggle / Colab outputs
 /kaggle/
 figures/*.png
 figures/*.pdf
+# PDF referensi di paper (tetap di disk, tidak di-commit)
+reports/04-paper/*.pdf
 __pycache__/
 .ipynb_checkpoints/
 .ipynb_checkpoints/
@@ -17,3 +21,12 @@ notebooks/.ipynb_checkpoints/
 .venv/
 venv/
 *.pyc
+
+# LaTeX build junk (draft-paper*.tex)
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk

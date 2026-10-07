@@ -79,7 +79,7 @@ TITLE-ABS-KEY((geothermal OR drill* OR wellbore* OR borehole* OR rig OR "rate of
 
 ## 3. Screening manual tanpa Rayyan (ganti Rayyan)
 
-File: `reports/screening_template.csv` (header siap, 1 baris contoh).
+File: `screening_template.csv` (satu folder; header siap, 1 baris contoh).
 
 1. Export Scopus 175 → CSV (Title, Authors, Year, Source, Abstract, DOI) → paste ke template.
 2. Dedup manual: sort by DOI → isi `Duplicates removed` (ekspektasi 0–5, single source).
@@ -225,4 +225,4 @@ Kontribusi kita (tetap): `StandardScaler vs RobustScaler × window 60s/30s + mea
 - [ ] Gap table §5 terisi 6 kolom untuk tiap paper, bukan generik.
 - [ ] Deklarasi Gen-AI dilampirkan (`tugas.txt:54`).
 
-*File ini: `reports/prisma.restart.v6.md`. Pendamping: `reports/screening_template.csv`.*
+*File ini: `reports/01-protokol-prisma/prisma.restart.v6.md`. Pendamping: `screening_template.csv` (satu folder).*
