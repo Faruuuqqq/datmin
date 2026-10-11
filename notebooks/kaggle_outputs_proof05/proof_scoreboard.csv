@@ -1,0 +1,6 @@
+decision,winner,S,sil,dbi,gate,weight_sensitivity_±10pp
+P1 scaler,robust,0.8847,0.9587,0.2657,PASS,stable
+P2 ROP winsorize,winsorized,0.8847,0.9587,0.2657,PASS (raw: FAIL),-
+P3 sensor set,7-sensors_OFF_locked,0.8847,0.9587,0.2657,PASS,-
+P4 sentinel,dropna-subset_locked,0.6655,0.6191,0.9176,tie-break cost+physics (ΔS<0.005),drift<0.01 all
+P5 representation,point-based,0.8245,0.9211,0.4527,PASS,see chatter+cost legs

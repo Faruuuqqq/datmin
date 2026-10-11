@@ -1,0 +1,11 @@
+check,value
+variance_share_top1_pct,52.68
+variance_share_DiffPress_excluded_pct,113.36
+range_ratio_ROP_vs_Torque,348.9
+autocorr_lag1_SPP,0.9998
+autocorr_lag1_RPM,0.999
+autocorr_lag1_ROP,0.9884
+sentinel_pct_SPP,1.177
+sentinel_pct_DiffPress,1.177
+skew_ROP,23.54
+kurt_ROP,643.3

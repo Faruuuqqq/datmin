@@ -1,0 +1,11 @@
+Sensor / Dataset Column,Abbreviation,Unit,Measurement Group,Data Type,Physical Meaning,Selection Status
+Rate Of Penetration (ft_per_hr),ROP,ft/hr,Drilling Performance (Kinematics),Continuous (Ratio),Axial speed of bit penetration through rock.,Primary Feature (Modeled)
+Weight on Bit (klbs),WOB,klbs,Mechanical (Axial Load),Continuous (Ratio),Axial load applied onto the drill bit.,Primary Feature (Modeled)
+Rotary RPM (RPM),RPM,rpm,Mechanical (Rotational Kinematics),Continuous (Ratio),Rotational frequency of the drill string.,Primary Feature (Modeled)
+Standpipe Pressure (psi),SPP,psi,Hydraulic (Fluid Circulation),Continuous (Ratio),Mud pressure at the rig standpipe.,Primary Feature (Modeled)
+Rotary Torque (kft_lb),Torque,kft_lb,Mechanical (Rotational Torque),Continuous (Ratio),Moment required to rotate the string against rock resistance.,Primary Feature (Modeled)
+Hook Load (klbs),HKLD,klbs,Mechanical (Axial Tensile Load),Continuous (Ratio),Pull force on the traveling block; basis for WOB.,Primary Feature (Modeled)
+Total Pump Output (gal_per_min),TPO,gal_per_min,Hydraulic (Volumetric Flow Rate),Continuous (Ratio),Mud flow rate circulated by the pumps.,Primary Feature (Modeled)
+Differential Pressure (psi),Diff Press,psi,Hydraulic (Downhole Motor Load),Continuous (Ratio),Derived pressure difference (Pason software channel).,"Excluded by default (buggy derivation, mean negative; 8-sensor sensitivity only)"
+Pason Gas (percent),Gas,%,Geochemical / Mud Logging,Continuous (Ratio),Hydrocarbon gas fraction in mud.,"Excluded (Sentinel ~100% -999.25, dead sensor)"
+Gamma (api),GR,api,Petrophysical / MWD-LWD,Continuous (Ratio),Natural gamma radiation of formation.,"Excluded (Sentinel ~100% -999.25, dead sensor)"

@@ -1,0 +1,5 @@
+cluster,Rate Of Penetration (ft_per_hr),Weight on Bit (klbs),Rotary RPM (RPM),Standpipe Pressure (psi),Rotary Torque (kft_lb),Hook Load (klbs),Total Pump Output (gal_per_min)
+0,14.21,18.72,17.23,1246.47,2.24,93.7,265.43
+1,10.58,10.78,18.89,1491.17,2.47,126.78,276.33
+2,0.41,5.63,13.99,1413.59,1.87,146.59,367.95
+3,0.11,34.75,0.29,20.19,0.1,68.71,11.7
