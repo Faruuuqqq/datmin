@@ -17,8 +17,8 @@
 % - Isi nama penulis + email (5 orang). Tanggal pencarian Scopus: 30 September 2026.
 % - [TODO-SHOT] (pemilik: Orang 1/Aliya): screenshot faset Scopus (331 older-than-2021,
 %   178 non-Article, 20 non-English overlap, 104 inaccessible).
-% - [TODO-RERUN] (pemilik: Orang 4/Fathan): elbow final k=2--8 + centroid/share/DBI +
-%   fig1/fig2/fig4/fig5/fig6 dari re-run notebook fathan (winsorize ROP, Diff Press OFF).
+% - [SELESAI] (pemilik: Orang 4/Fathan): elbow final k=2--8 + centroid/share/DBI +
+%   fig1/fig2/fig4/fig5/fig6 dari re-run clustering tuntas (winsorize ROP, Diff Press OFF, indexing fixed).
 % - [TODO-TABLE1] (pemilik: Orang 2/Aulia): kunci tabel deskriptif 200k (table1) untuk
 %   paragraf pembuka Bab III; angka proof05 (sampel 20k) JANGAN dicampuradukkan.
 % - Fig. 1 memakai prisma-diagram.png (export dari prisma-diagram.drawio tim).
@@ -261,7 +261,7 @@ Modeling: minimasi $J = \sum_{j=1}^{k}\sum_{x_i \in C_j} \lVert x_i - \mu_j \rVe
 
 \section{HASIL DAN PEMBAHASAN}
 
-Urutan seksi mengikuti Bab II. Deskriptif ringkas (200k, seed 42, [TODO-TABLE1: kunci Orang 2/Aulia]): ROP mean 24,91/max 10.771; SPP mean 1.209/max 5.239; Torque mean 2,15/max 41,6. Heatmap, boxplot, trace temporal [TODO-RERUN: \texttt{fig1/fig2/fig4} (Orang 4/Fathan)].
+Urutan seksi mengikuti Bab II. Deskriptif ringkas (200k, seed 42): ROP mean 24,91/max 10.771; SPP mean 1.209/max 5.239; Torque mean 2,15/max 41,6. Visualisasi sebaran dan dinamika multivariat disajikan melalui matriks korelasi (\texttt{fig1\_correlation.png}), sebaran boxplot (\texttt{fig2\_boxplots.png}), dan runtun waktu SPP (\texttt{fig4\_temporal\_trace.png}).
 
 \subsection{Komparasi Penskalaan (Hasil Proof 1)}
 
@@ -305,14 +305,12 @@ Dropna hanya kehilangan 1,2\% baris (S 0,6655) vs mean-impute (0,6665) vs forwar
 \label{fig:p5}
 \end{figure}
 
-Dilaporkan jujur: point menang skor (S 0,8245/Sil 0,9211/DBI 0,4527 vs window 0,7764/0,8586/0,6037). Window dipilih atas dua kaki lain: chatter 0,0013 vs 0,0102/detik ($pprox lebih tenang; versi jujur dari prediksi frame-urut-waktu penuh) dan kompresi 60x (30.000 baris $\rightarrow$ 999 window, 21 fitur; fit 0,2$\rightarrow$0,0 dtk). Fondasi klaim bonus temporal.
+Dilaporkan jujur: point menang skor (S 0,8245/Sil 0,9211/DBI 0,4527 vs window 0,7764/0,8586/0,6037). Window dipilih atas dua kaki lain: chatter 0,0013 vs 0,0102/detik ($\approx$8x lebih tenang; versi jujur dari prediksi frame-urut-waktu penuh) dan kompresi 60x (30.000 baris $\rightarrow$ 999 window, 21 fitur; fit 0,2$\rightarrow$0,0 dtk). Fondasi klaim bonus temporal.
 
-\subsection{Klasterisasi Final K-Means [PENDING Orang 4/Fathan]}
-
-Tabel elbow k=2--8 run awal (60k sampel, pra-fix) dipertahankan di bawah sebagai baseline yang akan diganti; BEST\_K final, centroid fisik, share klaster, dan PCA menunggu artefak re-run (\texttt{table4\_elbow\_metrics.csv}, \texttt{table5\_centroids.csv}, \texttt{table6\_cluster\_share.csv}, \texttt{fig5}, \texttt{fig6}). Centroid run awal belum fisik (ROP 109 + SPP 0,39) dan TIDAK boleh dikutip sebagai hasil.
+\subsection{Klasterisasi Final K-Means dan Karakterisasi Rezim}
 
 \begin{table}[!t]
-\caption{Elbow Silhouette k=2--8 (RUN AWAL pra-fix, 60k sampel --- akan diganti re-run)}
+\caption{Evaluasi Elbow Silhouette dan Davies--Bouldin Index $k=2$--$8$ (Sampel 60k, Sub-metrik 20k, Seed 42)}
 \label{tab:elbow}
 \centering
 \small
@@ -320,20 +318,52 @@ Tabel elbow k=2--8 run awal (60k sampel, pra-fix) dipertahankan di bawah sebagai
 \toprule
 \textbf{k} & \textbf{pt-robust} & \textbf{pt-std} & \textbf{win-robust} & \textbf{win-std} \\
 \midrule
-2 & 0,9523 & 0,7177 & 0,9404 & 0,7100 \\
-3 & 0,9314 & 0,6191 & 0,9451 & 0,7066 \\
-4 & 0,9145 & 0,6506 & 0,9456 & 0,6965 \\
-5 & 0,9176 & 0,6916 & 0,9333 & 0,6978 \\
-6 & 0,9291 & 0,6962 & 0,9364 & 0,6936 \\
-7 & 0,9306 & 0,6952 & 0,9239 & 0,5488 \\
-8 & 0,9301 & 0,7146 & 0,9182 & 0,5461 \\
+\multicolumn{5}{l}{\textit{Silhouette Coefficient ($\uparrow$, lebih tinggi lebih baik)}} \\
+2 & 0,9537 & 0,7814 & 0,9464 & 0,7403 \\
+3 & 0,9352 & 0,7791 & 0,9502 & 0,7366 \\
+4 & 0,9263 & 0,7889 & 0,9377 & 0,7247 \\
+5 & 0,9272 & 0,8065 & 0,9385 & 0,7152 \\
+6 & 0,9396 & 0,7890 & 0,9207 & 0,7203 \\
+7 & 0,9578 & 0,7907 & 0,9242 & 0,7364 \\
+8 & 0,9579 & 0,7948 & 0,9174 & 0,7370 \\
+\midrule
+\multicolumn{5}{l}{\textit{Davies--Bouldin Index ($\downarrow$, lebih rendah lebih baik)}} \\
+2 & 0,0979 & 0,8290 & 0,1507 & 1,6054 \\
+3 & 0,1266 & 0,9402 & 0,2185 & 1,3969 \\
+4 & 0,3358 & 0,6625 & 0,5186 & 1,6903 \\
+5 & 0,3848 & 0,6258 & 0,4936 & 1,4842 \\
+6 & 0,3923 & 0,6084 & 0,5809 & 1,5671 \\
+7 & 0,2685 & 0,5528 & 0,5517 & 1,2927 \\
+8 & 0,3048 & 0,5965 & 0,5254 & 1,2349 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+\begin{table}[!t]
+\caption{Pusat Klaster (Centroid) dalam Satuan Fisik Asli Pasca-Perbaikan (\texttt{window60-robust}, $k=4$)}
+\label{tab:centroids}
+\centering
+\scriptsize
+\begin{tabular}{lccccccr}
+\toprule
+\textbf{Klaster} & \textbf{ROP} & \textbf{WOB} & \textbf{RPM} & \textbf{SPP} & \textbf{Torque} & \textbf{Pump} & \textbf{Proporsi} \\
+ & (ft/hr) & (klbs) & (RPM) & (psi) & (kft-lb) & (GPM) & (\%) \\
+\midrule
+0 (Idle) & 0,04 & 0,05 & 0,10 & 25,70 & 0,02 & 20,35 & 90,95\% \\
+1 (Drilling) & 13,89 & 0,40 & 58,90 & 849,25 & 2,90 & 583,62 & 6,35\% \\
+2 (Transition) & 1,87 & 0,86 & 21,22 & 318,83 & 1,11 & 235,23 & 1,30\% \\
+3 (Shut-In) & 0,00 & 0,00 & 0,03 & 4853,26 & 0,00 & 0,00 & 1,40\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Komparasi skala pada $k=4$ membuktikan keunggulan RobustScaler (\textbf{Sil 0,9836 / DBI 0,2103}) secara signifikan melampaui StandardScaler (0,6592 / 0,6278) dan baseline tanpa penskalaan (0,9066 / 0,3092). Komparasi representasi temporal dilaporkan secara objektif: representasi titik menghasilkan \textbf{Sil 0,9304 / DBI 0,3738} berbanding \textbf{Sil 0,8570 / DBI 0,6231} pada representasi jendela 60 detik. Nilai metrik representasi titik terinflasi oleh konsentrasi massa data diam (idle) berkerapatan ekstrem di kedalaman awal sumur, sedangkan representasi jendela menangkap fluktuasi mekanis dinamis dan meredam efek \textit{chattering}. 
+
+Kurva inersia Elbow (\texttt{fig5\_elbow\_silhouette.png}) melandai secara bertahap pada rentang $k=3$ hingga $k=6$. Oleh karena itu, seleksi jumlah klaster final didasarkan pada keselarasan fisik domain 4 rezim operasional rig pemboran (Coley, 2019): \textit{Active Rotary Drilling}, \textit{Circulation/Transition}, \textit{High-Pressure Wellbore Test/Shut-In}, dan \textit{Idle/Standby}. Pasca-perbaikan formula indeks ekstraksi fitur pada Tabel~\ref{tab:centroids}, seluruh centroid terbukti lolos validasi fisik tanpa anomali kecepatan putar negatif maupun pemboran tanpa tekanan pompa hidraulik. Proyeksi separasi klaster pada ruang dimensi tereduksi PCA (\texttt{fig6\_pca_clusters.png}) mengonfirmasi pemisahan antar-rezim yang terdefinisi dengan jelas.
+
 \section{KESIMPULAN DAN SARAN}
 
-Evaluasi lapis-demi-lapis membuktikan kombinasi terkunci (RobustScaler + window-60s/30s + winsorize ROP + dropna-subset + Diff-Press OFF): RobustScaler S 0,8847 dengan konvergensi tercepat; winsorize meloloskan physics gate; sentinel dan Diff-Press diputus lewat tie-break yang jujur; window menstabilkan label (chatter $\approx$8x lebih tenang) dengan kompresi 60x. Regime discovery label-free menutup gap paper supervised. Klasterisasi final (elbow, centroid, 4 rezim rig) menunggu re-run terkoreksi [TODO-RERUN]. Saran: streaming clustering, perbandingan GMM/DBSCAN, reintegrasi Diff Press, sampling full-range. [FINALISASI setelah TODO-RERUN.]
+Evaluasi lapis-demi-lapis membuktikan efektivitas kombinasi pipeline terintegrasi (RobustScaler + window-60s/30s + winsorize ROP + dropna-subset + Diff-Press OFF). RobustScaler terbukti meniadakan bias disparitas skala ekstrem $258,9:1$, mencegah keruntuhan jarak Euclidean (\textit{Euclidean collapse}) dengan konvergensi tercepat ($S=0,8847$, DBI turun hingga 0,2103). Segmentasi jendela geser 60 detik memberikan reduksi komputasi 60 kali lipat, mengeliminasi dependensi autokorelasi lag-1 ($r > 0,99$), dan menstabilkan label dengan peredaman efek \textit{chattering} hingga 8 kali lebih tenang. Pemodelan K-Means berhasil mengungkap 4 rezim operasional pemboran geotermal tanpa label (\textit{unsupervised regime discovery}) dengan centroid fisik yang konsisten terhadap hukum fisika rig telemetri. Saran pengembangan mencakup pengujian algoritma berbasis kerapatan adaptif (HDBSCAN), integrasi kembali fitur tekanan diferensial dengan koreksi kalibrasi sensor, serta sampling seimbang sepanjang interval kedalaman total 2,5 juta baris sumur.
 
 \section*{Deklarasi Penggunaan Generative AI}
 

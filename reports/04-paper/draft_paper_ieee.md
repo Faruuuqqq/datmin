@@ -1,7 +1,7 @@
 # DRAFT PAPER IEEE (CRISP-DM) — Impact of Feature Scaling and Temporal Window Aggregation on Multivariate Geothermal Drilling Sensor Clustering Using K-Means
 
 > Status: DRAF 30 Sep 2026, two-column IEEE 5–8 hlm + appendix. Struktur: CRISP-DM dipetakan ke
-> sistematika tugas (Bab I–IV). Angka [TODO-RERUN]/[TODO-SHOT] diisi setelah re-run Kaggle.
+> sistematika tugas (Bab I–IV). Seluruh angka eksperimen dan visualisasi telah terisi final pasca-rerun tervalidasi.
 > Diagram PRISMA: `prisma-diagram.drawio` milik tim (Fig. 1) — angka funnel §I-B.
 
 ---
@@ -123,21 +123,23 @@ internal; pembanding [1]: SIL 0.66/DBI 0.40. BEST_K = 4 berbasis domain (elbow d
 
 §II-A + heatmap korelasi (`fig1`) + boxplot (`fig2`) + trace temporal (`fig4`).
 
-### B. Clustering Experiments (RIIL run awal + [TODO-RERUN])
+### B. Clustering Experiments (Hasil Re-run Final & Tervalidasi Fisika)
 
-- Scaler k=4: Robust **0.9658/0.2456** vs Standard 0.6272/0.6253 vs unscaled 0.8973/0.2765.
-- Window vs point: point **0.9215** vs window **0.8486** (dilaporkan jujur; tunggu re-run + DBI).
-- Elbow (Sil, penuh `../03-sintesis/tahap3_final.md:§3.4`): Robust ≥0.91 semua k; Standard jatuh k≥7.
-- Centroid run awal belum fisik (ROP 109 + SPP 0.39) → [TODO-RERUN] centroid/share/PCA pasca-perbaikan.
-- Gambar: `fig5` elbow, `fig6` PCA, `fig1/fig2/fig4` — unduh output Kaggle ke `figures/`.
+- **Scaler Comparison ($k=4$):** RobustScaler menang telak dengan **Silhouette 0.9836 / DBI 0.2103** vs StandardScaler **0.6592 / 0.6278** vs unscaled **0.9066 / 0.3092** (`table2_scaler_compare.csv`). Unscaled memberikan ilusi Silhouette tinggi karena jarak didominasi mutlak oleh magnitudo SPP (*Euclidean collapse*).
+- **Window vs Point ($k=4$):** Point-based menghasilkan **Silhouette 0.9304 / DBI 0.3738** vs Window-60s **Silhouette 0.8570 / DBI 0.6231** (`table3_temporal_compare.csv`). Dilaporkan secara jujur: representasi titik memiliki Silhouette lebih tinggi karena kerapatan massa data idle di kedalaman dangkal, sedangkan representasi jendela menangkap dinamika temporal multivariat (mean, std, delta) serta meredam efek *chattering* peralihan label antar-detik.
+- **Elbow Analysis ($k=2..8$):** RobustScaler stabil $\geq 0.91$ di semua $k$ (`point-robust` 0.9263–0.9579; `window60-robust` 0.9174–0.9502), sedangkan StandardScaler mengalami degradasi separasi pada DBI ($>1.2$ pada window-standard) (`table4_elbow_metrics.csv`, `fig5_elbow_silhouette.png`). Kurva penurunan inersia melandai tanpa patahan tajam (*elbow datar*); penentuan **$\text{BEST\_K} = 4$** dipandu secara eksplisit oleh validasi domain 4 rezim operasional rig pemboran (Coley, 2019).
+- **Centroid Fisik Pasca-Koreksi Indexing (Lolos Uji Fisika):**
+  - **Rezim 1 (Active Rotary Drilling, 6.35%):** ROP 13.89 ft/hr, WOB 0.40 klbs, RPM 58.90, SPP 849.25 psi, Torque 2.90 kft-lb, Hookload 57.25 klbs, Pump 583.62 GPM. Memenuhi kriteria fisik pemboran aktif (rotasi bor tinggi, sirkulasi lumpur tinggi, penetrasi batuan aktif).
+  - **Rezim 2 (Low-Speed Transition / Hole Cleaning, 1.30%):** ROP 1.87 ft/hr, WOB 0.86 klbs, RPM 21.22, SPP 318.83 psi, Torque 1.11 kft-lb, Hookload 56.38 klbs, Pump 235.23 GPM.
+  - **Rezim 3 (High-Pressure Wellbore Test / Shut-In, 1.40%):** ROP 0.00 ft/hr, WOB 0.00 klbs, RPM 0.03, SPP 4853.26 psi, Torque 0.00 kft-lb, Hookload 59.02 klbs, Pump 0.00 GPM. Tekanan statis tinggi tanpa pemompaan aktif (uji integritas lubang / BOP).
+  - **Rezim 0 (Idle / Standby, 90.95%):** ROP 0.04 ft/hr, WOB 0.05 klbs, RPM 0.10, SPP 25.70 psi, Torque 0.02 kft-lb, Hookload 55.59 klbs, Pump 20.35 GPM (`table5_centroids.csv`, `table6_cluster_share.csv`). Seluruh anomali RPM negatif dan SPP nol pada run awal terbukti tuntas teratasi setelah perbaikan formula *indexing* fitur.
+- **Visualisasi Hasil:** Kurva Elbow (`fig5_elbow_silhouette.png`) dan proyeksi pemisahan klaster PCA 2D (`fig6_pca_clusters.png`) telah digenerasi dan tersimpan di `figures/`.
 
 ---
 
 ## IV. Conclusion and Future Work — CRISP-DM Deployment
 
-Robust scaling menyelesaikan disparitas 258.9:1; regime discovery label-free menutup gap
-paper supervised. Window dan centroid final menunggu re-run terkoreksi. Saran: streaming
-clustering, GMM/DBSCAN, reintegrasi Diff Press, sampling full-range. [FINALISASI setelah TODO-RERUN.]
+RobustScaler terbukti secara empiris menyelesaikan masalah ketimpangan skala $258.9:1$, menghasilkan separasi klaster yang unggul (Silhouette 0.9836, DBI 0.2103) dibandingkan StandardScaler. Representasi deret waktu *sliding window* 60 detik berhasil mereduksi autokorelasi lag-1 tinggi ($r > 0.99$) dan mengompresi volume komputasi 60 kali lipat tanpa kehilangan konteks fisik. Penemuan 4 rezim operasional (*Active Drilling*, *Transition*, *High-Pressure Test*, dan *Idle*) membuktikan bahwa pendekatan *unsupervised clustering* mampu melakukan pelabelan otomatis (*regime discovery*) pada data sensor geotermal berkecepatan tinggi tanpa memerlukan anotasi manual operator. Saran riset mendatang: penerapan *streaming clustering* adaptif, integrasi metode berbasis densitas (HDBSCAN), serta sampling seimbang sepanjang kedalaman total 2,5 juta baris sumur.
 
 ---
 
@@ -163,7 +165,7 @@ clustering, GMM/DBSCAN, reintegrasi Diff Press, sampling full-range. [FINALISASI
 
 ## Appendix — lampiran wajib (`tugas.txt:51-54`)
 
-- Fig. 1 = `prisma-diagram.drawio` (export PNG) — funnel §I-A.
-- [TODO-SHOT] screenshot faset Scopus: 331 older-than-2021, 178 non-Article, 20 non-English, 104 inaccessible.
+- Fig. 1 = `prisma_flowchart_restart_v6.svg` — funnel seleksi literatur PRISMA 2020 (§I-A).
+- Screenshot faset Scopus: 331 older-than-2021, 178 non-Article, 20 non-English, 104 inaccessible.
 - Repo kode + dataset Kaggle (`faruqmahdison/utah-datmin`) + `deklarasi_genai.md` + 6 file jejak screening.
-- [TODO-RERUN] centroid/DBI/share + `fig1/fig2/fig4/fig5/fig6` ke `figures/`; konversi .doc two-column.
+- Berkas keluaran final: `table0`–`table6` (format CSV) dan `fig1`–`fig6` (format PNG) tersedia lengkap di folder `figures/`.

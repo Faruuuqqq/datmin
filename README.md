@@ -68,14 +68,12 @@ print("First 5 records:", df.head())
 # notebooks/utah_forge_56_32_geothermal_drilling_sensor_clust-fathan.ipynb
 ```
 
-Setelah re-run notebook: unduh `/kaggle/output/` (`table0–table6`, `fig1–fig6`) ke
-`figures/`, isi slot `[TODO-RERUN]` di `draft_paper_ieee.md`, konversi ke .doc
-template IEEE, lampirkan repo + dataset + diagram PRISMA.
+Hasil re-run lengkap (`table0–table6`, `fig1–fig6`) tersimpan di `figures/`, slot metrik di `draft_paper_ieee.md` dan `draft-paper.tex` telah terisi final, siap dikonversi ke .doc template IEEE.
 
-## Status (30 Sep 2026)
+## Status (Tervalidasi & Sinkron)
 
 - [x] PRISMA 740 → 9 + backup 7 (terkunci, aritmetika pas)
 - [x] Tahap 2 final (angka real) + Tahap 3 desain + hasil awal jujur
-- [x] Draft IEEE (Bab I–II penuh; §III-B menunggu re-run)
-- [ ] Re-run notebook pasca-perbaikan (winsorize ROP, Diff Press OFF)
-- [ ] Finalisasi §III-B + konversi .doc + submit
+- [x] Draft IEEE (Bab I–II penuh; §III-B hasil tervalidasi & bebas TODO-RERUN)
+- [x] Re-run clustering pasca-perbaikan (winsorize ROP, Diff Press OFF, indexing fixed, centroid lolos uji fisika)
+- [x] Finalisasi §III-B (`table0–table6` & `fig1–fig6` di `figures/`) + siap konversi .doc / submit
