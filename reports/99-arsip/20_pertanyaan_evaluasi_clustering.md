@@ -135,10 +135,10 @@ Kami mengekstraksi 3 fitur statistik per sensor ($7 \times 3 = 21$ fitur):
 ### Q14. "Bagaimana cara membaca fisik Centroid pada Tabel 5? Jelaskan maknanya!"
 **Jawaban:**
 Kami mengonversi koordinat centroid kembali ke satuan fisik instrumen asli:
-- **Klaster 1 (Active Drilling, 6.35%):** ROP $13.89\text{ ft/hr}$, RPM $58.9$, SPP $849\text{ psi}$, Pompa $583\text{ GPM}$, Torsi $2.9\text{ kft}\cdot\text{lb}$. $\to$ *Mata bor berputar kencang, lumpur mengalir deras membawa serpihan batu, bor aktif menembus granit.*
-- **Klaster 2 (Transition / Circulation, 1.30%):** ROP $1.87\text{ ft/hr}$, RPM $21.2$, Pompa $235\text{ GPM}$, SPP $318\text{ psi}$. $\to$ *Sirkulasi pembersihan lubang bor dengan putaran perlahan.*
-- **Klaster 3 (High-Pressure Wellbore Test, 1.40%):** ROP $0.00$, RPM $0.03$, Pompa $0.00\text{ GPM}$, namun SPP tinggi di $4.853\text{ psi}$. $\to$ *Uji integritas tekanan sumur / penutupan pencegah semburan liar (BOP Shut-in).*
-- **Klaster 0 (Idle / Standby, 90.95%):** ROP $0.04$, RPM $0.10$, Pompa $20\text{ GPM}$, SPP $25\text{ psi}$, Hookload $55.6\text{ klbs}$. $\to$ *Rig istirahat atau penyambungan pipa.*
+- **Klaster 0 (Active Rotary Drilling, 95.40%):** ROP $14.21\text{ ft/hr}$, RPM $17.2$, WOB $18.7\text{ klbs}$, SPP $1.246\text{ psi}$, Pompa $265\text{ GPM}$, Torsi $2.24\text{ kft}\cdot\text{lb}$. $\to$ *Mata bor berputar, lumpur mengalir stabil, beban pada pahat aktif memotong granit pada kedalaman formasi.*
+- **Klaster 1 (High-Pressure Resistant Zone, 0.71%):** ROP $10.58\text{ ft/hr}$, RPM $18.9$, WOB $10.8\text{ klbs}$, SPP $1.491\text{ psi}$, Pompa $276\text{ GPM}$. $\to$ *Penetrasi formasi keras bertekanan hidraulik tinggi.*
+- **Klaster 2 (Circulation & Hole Cleaning, 0.71%):** ROP $0.41\text{ ft/hr}$, RPM $14.0$, WOB $5.6\text{ klbs}$, SPP $1.414\text{ psi}$, Pompa maksimum di $368\text{ GPM}$. $\to$ *Sirkulasi intensif pembersihan serbuk bor (cuttings) dengan debit pompa hidraulik tertinggi tanpa pemboran agresif.*
+- **Klaster 3 (Pipe Connection / Standby Slips, 3.17%):** ROP $0.11$, RPM $0.29$ (~0 rotasi), Pompa $11.7\text{ GPM}$ (~0 pompa), SPP $20\text{ psi}$, WOB $34.75\text{ klbs}$ (beban rangkaian tertahan di meja putar). $\to$ *Penyambungan pipa bor baru (connection) atau standby.*
 
 ---
 
@@ -146,14 +146,14 @@ Kami mengonversi koordinat centroid kembali ke satuan fisik instrumen asli:
 **Jawaban:**
 - Itu adalah **bug teknis pada pemotongan indeks fitur di Cell 32**, bukan kegagalan algoritma K-Means.
 - Saat menyusun fitur jendela, kolom dibuat berselang-seling: `[ROP_mean, ROP_std, ROP_delta, WOB_mean, ...]`. Kode lama melakukan *slicing* `cent[:, :7]`, sehingga fitur delta ROP (yang bernilai negatif saat laju melambat) terpental dan terlabeli sebagai RPM!
-- Setelah kami perbaiki formula penarikan kolom `__mean` secara presisi menggunakan `mean_indices`, seluruh koordinat centroid langsung konsisten dengan hukum fisika rig pemboran (RPM positif realistis 58.9, pompa aktif 583 GPM, SPP 849 psi).
+- Setelah kami perbaiki formula penarikan kolom `__mean` secara presisi menggunakan `mean_indices`, seluruh koordinat centroid langsung konsisten dengan hukum fisika rig pemboran (RPM positif realistis 17.23, pompa aktif 265 GPM, SPP 1246 psi).
 
 ---
 
-### Q16. "Kenapa proporsi Klaster Idle (Klaster 0) sangat dominan mencapai 90.95%?"
+### Q16. "Kenapa proporsi Klaster Active Drilling (Klaster 0) dominan mencapai 95.40%?"
 **Jawaban:**
-- Ini mencerminkan **kondisi nyata operasi lapangan (*operational reality*)**: Sampel 60.000 baris yang dianalisis berasal dari *head-segment* (8–10 Februari 2021) di awal pemboran sumur dangkal.
-- Pada periode awal ini, rig lebih banyak menghabiskan waktu untuk *rig-up*, kalibrasi instrumen, pengangkatan pipa (*tripping*), dan menunggu persiapan sirkulasi daripada pemboran aktif menembus granit keras.
+- Ini mencerminkan **kondisi riil seluruh interval kedalaman sumur (sampling sistematis full-span 2,5 juta baris)**.
+- Setelah sampel diperluas mencakup rentang penuh sebulan operasi (bukan hanya kepala sumur Feb awal), mayoritas aktivitas rig Utah FORGE Well 56-32 memang didedikasikan untuk penetrasi formasi batuan granit keras secara berkesinambungan dengan sirkulasi lumpur aktif.
 
 ---
 
