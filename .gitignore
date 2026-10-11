@@ -5,6 +5,8 @@ dataset/*.parquet
 *.csv
 # ...tapi CSV jejak PRISMA di reports/ wajib ke-track
 !reports/**/*.csv
+# ...dan CSV proof/clustering di notebooks/ ikut di-commit (kecil,regen-verified)
+!notebooks/**/*.csv
 
 # Kaggle / Colab outputs
 /kaggle/
