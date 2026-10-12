@@ -29,41 +29,41 @@
 
 \title{Impact of Feature Scaling and Temporal Window Aggregation on Multivariate Geothermal Drilling Sensor Clustering Using K-Means}
 
-\author{\IEEEauthorblockN{1\textsuperscript{st} Nama Anggota 1}
-\IEEEauthorblockA{\textit{Program Studi S1 Teknik Informatika} \\
-\textit{Universitas Padjadjaran}\\
+\author{\IEEEauthorblockN{1\textsuperscript{st} Aulia Fadhila Mumtaza}
+\IEEEauthorblockA{\textit{Informatics Engineering} \\
+\textit{Padjadjaran University}\\
 Sumedang, Indonesia \\
-nama1@mail.unpad.ac.id}
+auliafm46@gmail.com}
 \and
-\IEEEauthorblockN{2\textsuperscript{nd} Nama Anggota 2}
-\IEEEauthorblockA{\textit{Program Studi S1 Teknik Informatika} \\
-\textit{Universitas Padjadjaran}\\
+\IEEEauthorblockN{2\textsuperscript{nd} Fathan Ariiq Rasbi Yalis}
+\IEEEauthorblockA{\textit{Informatics Engineering} \\
+\textit{Padjadjaran University}\\
 Sumedang, Indonesia \\
-nama2@mail.unpad.ac.id}
+fathanariiqry@gmail.com}
 \and
-\IEEEauthorblockN{3\textsuperscript{rd} Nama Anggota 3}
-\IEEEauthorblockA{\textit{Program Studi S1 Teknik Informatika} \\
-\textit{Universitas Padjadjaran}\\
+\IEEEauthorblockN{3\textsuperscript{rd} Aliya Zahra Nurazizah}
+\IEEEauthorblockA{\textit{Informatics Engineering} \\
+\textit{Padjadjaran University}\\
 Sumedang, Indonesia \\
-nama3@mail.unpad.ac.id}
+aliyazahranur145@gmail.com}
 \and
-\IEEEauthorblockN{4\textsuperscript{th} Nama Anggota 4}
-\IEEEauthorblockA{\textit{Program Studi S1 Teknik Informatika} \\
-\textit{Universitas Padjadjaran}\\
+\IEEEauthorblockN{4\textsuperscript{th} Achmad Faruq Mahdison}
+\IEEEauthorblockA{\textit{Informatics Engineering} \\
+\textit{Padjadjaran University}\\
 Sumedang, Indonesia \\
-nama4@mail.unpad.ac.id}
+raja11.faruq@gmail.com}
 \and
-\IEEEauthorblockN{5\textsuperscript{th} Nama Anggota 5}
-\IEEEauthorblockA{\textit{Program Studi S1 Teknik Informatika} \\
-\textit{Universitas Padjadjaran}\\
+\IEEEauthorblockN{5\textsuperscript{th} M. Rafif Widyadhana}
+\IEEEauthorblockA{\textit{Informatics Engineering} \\
+\textit{Padjadjaran University}\\
 Sumedang, Indonesia \\
-nama5@mail.unpad.ac.id}
+rpippp15@gmail.com}
 }
 
 \maketitle
 
 \begin{abstract}
-Pengeboran geotermal pada granit kristalin keras berbiaya puluhan ribu dolar per hari, sementara pencatatan status rig manual lambat, subjektif, dan diskontinu. Data sensor rig multivariat berfrekuensi tinggi umumnya tanpa label sehingga menuntut klasterisasi unsupervised yang tahan disparitas skala, dependensi temporal, dan noise instrumen. Mengikuti CRISP-DM, kajian ini memprofilkan dataset Utah FORGE Well 56-32 \cite{benaoun2022} (2.506.359 rekaman 1 Hz, 22 kolom menjadi 8 kandidat dan 7 sensor dimodelkan, nol duplikat eksak): disparitas skala 348,9:1 (sampel 20k, seed 42), autokorelasi temporal $\approx$ 1,0 pada lag-1, sentinel $-999{,}25$ sebesar 1,177\%, dan outlier ROP (skew 23,54; kurtosis 643,3). Tinjauan berpedoman PRISMA atas Scopus (740 $\rightarrow$ 409 $\rightarrow$ 231 $\rightarrow$ 127 $\rightarrow$ 9 studi) menunjukkan literatur supervised, univariat, atau tanpa studi interaksi scaler$\times$window. Eksperimen terkontrol per komponen membandingkan StandardScaler vs RobustScaler $\times$ point-based vs sliding-window 60 detik (mean/std/delta) pada K-Means: RobustScaler menang (Sil 0,9587/DBI 0,2657/S 0,8847; konvergen 4 vs 7 iterasi), winsorize ROP wajib (gate fisik FAIL $\rightarrow$ PASS), Diff-Press OFF atas dasar fisik (metrik seri), dropna atas dasar tie-break (seri kualitas, row-loss 1,2\%), dan window menang stabilitas label (chatter 0,0013 vs 0,0102/detik, $\approx$8x) plus kompresi 60x meski point menang skor. Klasterisasi final (elbow, centroid, pemetaan rezim) menunggu re-run terkoreksi.
+Pengeboran geotermal pada granit kristalin keras berbiaya puluhan ribu dolar per hari, sementara pencatatan status rig manual lambat, subjektif, dan diskontinu. Data sensor rig multivariat berfrekuensi tinggi umumnya tanpa label sehingga menuntut klasterisasi unsupervised yang tahan disparitas skala, dependensi temporal, dan noise instrumen. Mengikuti CRISP-DM, kajian ini memprofilkan dataset Utah FORGE Well 56-32 \cite{benaoun2022} (2.506.359 rekaman 1 Hz, 22 kolom menjadi 8 kandidat dan 7 sensor dimodelkan, nol duplikat eksak): disparitas skala 348,9:1 (sampel 20k, seed 42), autokorelasi temporal $\approx$ 1,0 pada lag-1, sentinel $-999{,}25$ sebesar 1,177\%, dan outlier ROP (skew 23,54; kurtosis 643,3). Tinjauan berpedoman PRISMA atas Scopus (740 $\rightarrow$ 409 $\rightarrow$ 231 $\rightarrow$ 127 $\rightarrow$ 9 studi) menunjukkan literatur supervised, univariat, atau tanpa studi interaksi scaler$\times$window. Eksperimen terkontrol per komponen membandingkan StandardScaler vs RobustScaler $\times$ point-based vs sliding-window 60 detik (mean/std/delta) pada K-Means: RobustScaler menang (Sil 0,9587/DBI 0,2657/S 0,8847; konvergen 4 vs 7 iterasi), winsorize ROP wajib (gate fisik FAIL $\rightarrow$ PASS), Diff-Press OFF atas dasar fisik (metrik seri), dropna atas dasar tie-break (seri kualitas, row-loss 1,2\%), dan window menang stabilitas label (chatter 0,0013 vs 0,0102/detik, $\approx$8x) plus kompresi 60x meski point menang skor. Klasterisasi final K-Means ($k=4$) pada representasi jendela geser bertapis RobustScaler mengonfirmasi pembentukan 4 rezim operasional rig pemboran tervalidasi fisika (Active Rotary Drilling 95,40\%, High-Pressure Drilling 0,71\%, Circulation 0,71\%, dan Pipe Connection/Standby 3,17\%) dengan separasi optimal (Silhouette 0,8497; DBI 0,4103) dan pemenuhan 100\% aturan physics gate.
 \end{abstract}
 
 \begin{IEEEkeywords}

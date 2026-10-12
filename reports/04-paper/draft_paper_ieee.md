@@ -10,9 +10,16 @@
 
 **Impact of Feature Scaling and Temporal Window Aggregation on Multivariate Geothermal Drilling Sensor Clustering Using K-Means**
 
+### Authors
+1. **Aulia Fadhila Mumtaza** (Informatics Engineering, Padjadjaran University, Sumedang, Indonesia — auliafm46@gmail.com)
+2. **Fathan Ariiq Rasbi Yalis** (Informatics Engineering, Padjadjaran University, Sumedang, Indonesia — fathanariiqry@gmail.com)
+3. **Aliya Zahra Nurazizah** (Informatics Engineering, Padjadjaran University, Sumedang, Indonesia — aliyazahranur145@gmail.com)
+4. **Achmad Faruq Mahdison** (Informatics Engineering, Padjadjaran University, Sumedang, Indonesia — raja11.faruq@gmail.com)
+5. **M. Rafif Widyadhana** (Informatics Engineering, Padjadjaran University, Sumedang, Indonesia — rpippp15@gmail.com)
+
 ## Abstract
 
-*Unsupervised monitoring of geothermal drilling rigs requires clustering high-frequency multivariate sensor streams without labels. Following CRISP-DM, we profile the Utah FORGE Well 56-32 dataset (2,506,359 records at 1 Hz, 22 columns → 8 sensors, zero exact duplicates, 2021/02/08–2021/03/09): scale disparity 258.9:1, temporal autocorrelation ≈ 1.0 at lag-1, sentinel −999.25, ROP outliers 8.65%. A PRISMA-guided review (740 → 409 → 231 → 127 → 9 included studies) shows prior work either needs labels, uses single sensors, or ignores scaler–window interaction. We compare StandardScaler vs RobustScaler × point-based vs 60-s sliding-window (mean/std/delta) under K-Means (k = 2–8), selected by elbow and validated by Silhouette and Davies–Bouldin index. Initial runs show RobustScaler dominates (Sil 0.966 vs 0.627), k = 4 selected on domain grounds (four rig regimes); window-vs-point and final centroids await a corrected re-run (ROP winsorized, Diff Press excluded).*
+*Unsupervised monitoring of geothermal drilling rigs requires clustering high-frequency multivariate sensor streams without labels. Following CRISP-DM, we profile the Utah FORGE Well 56-32 dataset (2,506,359 records at 1 Hz, 22 columns → 8 sensors, zero exact duplicates, 2021/02/08–2021/03/09): scale disparity 348.9:1 (20k sample, seed 42), temporal autocorrelation ≈ 1.0 at lag-1, sentinel −999.25 (1.177%), ROP outliers (skew 23.54; kurtosis 643.3). A PRISMA-guided review (740 → 409 → 231 → 127 → 9 included studies) shows prior work either needs labels, uses single sensors, or ignores scaler–window interaction. We evaluate controlled preprocessing choices (winsorizing ROP, excluding buggy Differential Pressure, tie-break dropna) and compare StandardScaler vs RobustScaler × point-based vs 60-s sliding-window (mean/std/delta) under K-Means (k = 2–8), selected by elbow and validated by Silhouette and Davies–Bouldin index. RobustScaler dominates (Sil 0.9587 / DBI 0.2657 / S 0.8847) by eliminating Euclidean collapse, while 60-s window aggregation suppresses label chattering by 8x (0.0013 vs 0.0102 flips/s) and provides 60x computational compression. Final K-Means clustering at k = 4 successfully discovers four physically validated rig operating regimes (Active Rotary Drilling 95.40%, High-Pressure Resistant Zone Drilling 0.71%, Circulation & Hole Cleaning 0.71%, and Pipe Connection/Standby 3.17%) that pass 100% of physical plausibility gates (Silhouette 0.8497; DBI 0.4103).*
 
 **Keywords:** geothermal drilling; multivariate time series; K-means clustering; feature scaling; sliding window; Silhouette; Davies-Bouldin; Utah FORGE; CRISP-DM.
 
