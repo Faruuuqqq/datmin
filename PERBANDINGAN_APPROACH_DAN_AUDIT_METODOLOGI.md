@@ -2,7 +2,7 @@
 
 > **Tujuan dokumen.** Dokumen ini membandingkan secara akademis pendekatan yang terekam pada repo `datmin/` dengan rancangan pipeline audit baru untuk Well 56-32. Kritik diarahkan pada validitas inferensi dan reproduksibilitas, **bukan** pada individu atau niat pembuat repo.
 >
-> **Batas bukti dan status.** Temuan upstream di bawah bersumber dari kode, notebook, tabel, dan laporan yang tersedia pada tree ini; dokumen ini tidak menjalankan notebook, memuat CSV mentah, atau mereplikasi angka. Rancangan audit baru juga masih **`PLANNING_ONLY`**: `kmeans_fits: 0`, `scaler_fits: 0`, C2/C3 `NOT TESTED`, dan bukan bukti bahwa pipeline baru telah menghasilkan model pemenang. Karena itu, istilah *leakage*, *collapse*, dan *klaim rapuh* dipakai sebagai diagnosis metodologis berdasarkan implementasi/bukti yang tersedia, bukan vonis universal atas semua kemungkinan rerun.
+> **Batas bukti dan status.** Temuan upstream di bawah bersumber dari kode, notebook, tabel, dan laporan yang tersedia pada tree ini. Pipeline bersih Rafif (`clean-pipeline-56-32/`) **sudah tereksekusi**: fase A 38.177 window valid, fase B train 26.723 + embargo 3600 s + test 11.394 dengan `fit_rows == 26723`, fase C 126 run dengan 42 verdict (`NO-WINNER` 38, `ELIGIBLE` 4) — lihat `outputs/manifests/phase_{a,b,c}_manifest.json` dan `outputs/metrics/verdict_ledger.csv`. Dokumen ini tidak me-rerun notebook upstream; istilah *leakage*, *collapse*, dan *klaim rapuh* dipakai sebagai diagnosis metodologis berdasarkan implementasi/bukti yang tersedia, bukan vonis universal atas semua kemungkinan rerun.
 
 ## 1. Ringkasan eksekutif
 
@@ -24,12 +24,12 @@ Karena alasan itu, pendekatan audit baru memilih arsitektur yang lebih konservat
 | Komponen | Repo `datmin/` (upstream) | Pipeline audit baru |
 |---|---|---|
 | Tujuan umum | Clustering sensor pemboran geothermal tanpa label; membandingkan scaler dan representasi point/window. | Menguji kandidat clustering secara leakage-safe pada deret waktu 56-32, dengan hak eksplisit untuk menyimpulkan `NO-WINNER`. |
-| Bukti yang dipakai di dokumen ini | Implementasi `src/kaggle_utils.py`, `src/run_clustering_eval.py`, laporan Tahap 3, dan CSV occupancy yang tersedia. | `_audit-upstream/clean-pipeline-56-32-plan-v1.md` dan ledger audit terkait. |
-| Status hasil | Angka/artefak upstream dibaca sebagai klaim yang terdokumentasi, belum direplikasi ulang di dokumen ini. | Rancangan saja; bukan hasil fit atau bukti performa. |
+| Bukti yang dipakai di dokumen ini | Implementasi `src/kaggle_utils.py`, `src/run_clustering_eval.py`, laporan Tahap 3, dan CSV occupancy yang tersedia. | `clean-pipeline-56-32/protocol.json`, `clean-pipeline-56-32/scripts/prepare_windows.py`, `clean-pipeline-56-32/scripts/split_scale.py`, manifest fase A/B/C, dan metrik `train_*` di `clean-pipeline-56-32/outputs/`. |
+| Status hasil | Angka/artefak upstream dibaca sebagai klaim yang terdokumentasi, belum direplikasi ulang di dokumen ini. | Pipeline bersih Rafif sudah tereksekusi (38.177 window valid; train 26.723 + embargo 3600 s + test 11.394; `fit_rows == 26723`); detail EDA train-only ada di dokumen STATISTIK. |
 | Prinsip interpretasi | Metrik internal menjelaskan geometri sampel yang dianalisis. | Metrik internal perlu lolos guard split, occupancy, dan stabilitas sebelum dipakai untuk seleksi. |
-| Statistik deskriptif & EDA | Dihitung global pada populasi/subset ~200k (lihat [`STATISTIK_DESKRIPTIF_DAN_EDA.md`](STATISTIK_DESKRIPTIF_DAN_EDA.md)). | Wajib diisolasi pada partisi Train (70%) ber-embargo guna mencegah kebocoran informasi. |
+| Statistik deskriptif & EDA | Arsip upstream: 8 sensor global pada subset ~200k (lihat `reports/03-sintesis/tahap2_final.md`; bukan isi dokumen STATISTIK saat ini). | Dokumen [`STATISTIK_DESKRIPTIF_DAN_EDA.md`](STATISTIK_DESKRIPTIF_DAN_EDA.md) saat ini = **hasil Rafif**: 13 channel → 39 fitur window tumbling 60/60, diisolasi pada Train (70%) ber-embargo. |
 
-**Rincian EDA upstream.** Taksonomi delapan sensor, tabel angka deskriptif, korelasi, outlier/sentinel, inventaris visualisasi, dan batas audit EDA global versus *train-only* dirangkum terpisah pada [`STATISTIK_DESKRIPTIF_DAN_EDA.md`](STATISTIK_DESKRIPTIF_DAN_EDA.md). Dokumen tersebut adalah baseline eksploratif, bukan hasil rerun pipeline audit baru.
+**Rincian EDA saat ini.** Dokumen [`STATISTIK_DESKRIPTIF_DAN_EDA.md`](STATISTIK_DESKRIPTIF_DAN_EDA.md) **bukan lagi EDA upstream 8-sensor**; ia adalah EDA train-only pipeline bersih Rafif (taksonomi 13 channel, tabel 39 fitur n=26.723, korelasi Pearson+Spearman level window, attrition fase A, isolasi Train+embargo fase B, artefak `eda_*`). Angka upstream lama (8 sensor, Diff Press, rasio 258.9:1, r=0.925/0.747) hanya tersisa sebagai arsip di `reports/03-sintesis/tahap2_final.md` dan tidak boleh dibaca sebagai isi dokumen STATISTIK.
 
 **Catatan tentang istilah.** *Train* adalah bagian awal kronologis yang diizinkan untuk fit dan seleksi; *Test* adalah bagian akhir yang hanya dipakai untuk evaluasi terpisah. *Embargo* adalah interval buffer yang dikeluarkan dari keduanya agar dukungan waktu/window tidak berbagi batas. *Coverage gate* adalah syarat minimum observasi valid per kanal sebelum window diterima.
 
@@ -119,7 +119,7 @@ Perbedaan bukan soal “lebih banyak preprocessing” atau mengejar skor lebih t
 6. **`NO-WINNER` sebagai hasil sah.** Ketidakstabilan, degenerasi, share ekstrem, metrik invalid, atau pelanggaran guard mengalahkan dorongan untuk menetapkan pemenang.
 7. **Label statistik terlebih dahulu.** Klaster diberi kode `C0..Ck`; interpretasi fisik ditunda sampai validasi eksternal tersedia.
 
-Kontrak tersebut tercantum sebagai rencana pada [`_audit-upstream/clean-pipeline-56-32-plan-v1.md:11-54`](../clean-pipeline-56-32-plan-v1.md#L11-L54). Ia harus dibaca sebagai **spesifikasi desain**, bukan sebagai bukti bahwa seluruh guard sudah dieksekusi atau bahwa hasil audit baru lebih baik secara empiris.
+Kontrak tersebut didefinisikan di [`clean-pipeline-56-32/protocol.json`](clean-pipeline-56-32/protocol.json) dan **sudah tereksekusi**: 38.177 window valid (train 26.723 + embargo 3600 s + test 11.394), scaler `fit_rows == 26723`, grid 126 run (3 scaler × 2 algoritma × 7 k × 3 seed) dengan 42 verdict (`NO-WINNER` 38, `ELIGIBLE` 4) — lihat [`phase_a_manifest.json`](clean-pipeline-56-32/outputs/manifests/phase_a_manifest.json), [`phase_b_manifest.json`](clean-pipeline-56-32/outputs/manifests/phase_b_manifest.json), [`phase_c_manifest.json`](clean-pipeline-56-32/outputs/manifests/phase_c_manifest.json), dan [`verdict_ledger.csv`](clean-pipeline-56-32/outputs/metrics/verdict_ledger.csv).
 
 ## 6. Matriks komparasi metodologis
 
@@ -132,14 +132,14 @@ Kontrak tersebut tercantum sebagai rencana pada [`_audit-upstream/clean-pipeline
 | Fitur | 7/8 sensor × mean/std/delta; konfigurasi berganti antara jalur. | 13 kanal × mean/pop-std/delta = 39 fitur, dengan kontrak eksplisit. | Skema fitur dan attrition lebih mudah ditelusuri; tetap perlu ablation/justifikasi di masa depan. |
 | Sampling/split | Full-span/subsampel dan fit/evaluasi satu populasi pada jalur final yang diperiksa. | 70% awal Train, embargo ≥1 jam, 30% akhir Test. | Menguji perpindahan waktu dan memisahkan evaluasi dari fit. |
 | Scaling | `fit_transform` pada matriks yang juga dikelompokkan/dinilai. | `fit` hanya pada Train; Test hanya `transform`. | Mencegah statistik Test masuk ke representasi fit. |
-| Seleksi model | `k=2..8`, tetapi `BEST_K=4` dikaitkan dengan prior empat rezim. | Kandidat/guard perlu dibekukan; Test bukan alat seleksi. | Mengurangi pemilihan pasca-hoc dan confirmation bias. |
-| Model yang dibandingkan | K-Means dengan Standard/Robust dan point/window di jalur utama. | K-Means dan GMM direncanakan pada Train untuk `k=2..8`. | Perbandingan hanya bermakna bila budget, split, dan guard sama; rencana bukan hasil. |
-| Evaluasi | Silhouette/DBI internal; nilai dihitung pada sampel yang sama dengan label fit di jalur final. | Metrik Train/Test terpisah, dengan alasan NA dicatat. | Memisahkan diagnosis fit dari indikasi generalisasi temporal. |
-| Occupancy/collapse | Share final dipublikasikan, tetapi ketimpangan 95,40/0,71/0,71/3,17% tetap dipromosikan sebagai rezim. | Share/empty/collapse harus dilaporkan dan menjadi guard kandidat. | Mencegah metrik internal menjadi alasan untuk menutupi partisi sepele. |
-| Stabilitas | Seed 42 digunakan; bukti stabilitas lintas-split/episode tidak tersedia pada jalur yang diperiksa. | Status `NO-WINNER` bila metrik/occupancy tidak stabil; evaluasi blok/stabilitas perlu dibuktikan sebelum klaim. | Menguji apakah pola bertahan, bukan hanya muncul sekali. |
+| Seleksi model | `k=2..8`, tetapi `BEST_K=4` dikaitkan dengan prior empat rezim. | Grid `k=2..8` tereksekusi dengan guard terkunci (collapse <1%, rentang Silhouette, ARI); Test bukan alat seleksi; 38 `NO-WINNER` vs 4 `ELIGIBLE` pada seed primer 42. | Mengurangi pemilihan pasca-hoc dan confirmation bias. |
+| Model yang dibandingkan | K-Means dengan Standard/Robust dan point/window di jalur utama. | K-Means dan GMM tereksekusi pada Train untuk `k=2..8` × 3 scaler (126 run). | Perbandingan hanya bermakna bila budget, split, dan guard sama; lihat `verdict_ledger.csv`. |
+| Evaluasi | Silhouette/DBI internal; nilai dihitung pada sampel yang sama dengan label fit di jalur final. | Metrik Train/Test terpisah tereksekusi (Silhouette sampel 5.000, DBI, occupancy, collapse), dengan alasan NA/collapse dicatat di `clustering_results_all.csv`. | Memisahkan diagnosis fit dari indikasi generalisasi temporal. |
+| Occupancy/collapse | Share final dipublikasikan, tetapi ketimpangan 95,40/0,71/0,71/3,17% tetap dipromosikan sebagai rezim. | Share/empty/collapse dilaporkan per kandidat dan menjadi guard (`primary_collapse_runs` 27 pada seed primer); pelanggar = `NO-WINNER`. | Mencegah metrik internal menjadi alasan untuk menutupi partisi sepele. |
+| Stabilitas | Seed 42 digunakan; bukti stabilitas lintas-split/episode tidak tersedia pada jalur yang diperiksa. | Diuji lintas 3 seed (42/0/1) via rentang Silhouette/DBI dan ARI pairwise; `unstable` = `NO-WINNER`. | Menguji apakah pola bertahan, bukan hanya muncul sekali. |
 | Nama klaster | Pemetaan langsung ke empat rezim fisik dan “physics gate”. | `C0..Ck` terlebih dahulu. | Menjaga perbedaan antara struktur statistik dan keadaan operasi nyata. |
 | Validasi domain | Tidak ada driller log/panel independen yang ditautkan pada bukti ini. | Wajib log operasi atau validasi ahli independen sebelum klaim rezim. | Menutup celah antara centroid numerik dan ground truth lapangan. |
-| Hasil ketika bukti gagal | Narasi “best/final/physics passed” tersedia pada laporan. | `NO-WINNER`, `NOT TESTED`, atau `PLANNING_ONLY` adalah status eksplisit. | Mengurangi overclaim dan menjaga keputusan dapat diaudit. |
+| Hasil ketika bukti gagal | Narasi “best/final/physics passed” tersedia pada laporan. | `NO-WINNER` (38/42 verdict primer) atau `ELIGIBLE` (4/42) adalah status tereksekusi di `verdict_ledger.csv`. | Mengurangi overclaim dan menjaga keputusan dapat diaudit. |
 
 ## 7. Apa yang tetap bernilai dari repo upstream
 
@@ -169,12 +169,19 @@ Sebelum klaim ilmiah dinaikkan, bukti minimal berikut diperlukan:
 
 ## 9. Referensi bukti lokal utama
 
-- [`src/kaggle_utils.py`](src/kaggle_utils.py): implementasi `clean_frame()` dan `build_windows()` yang menjadi dasar diagnosis sentinel/gap/stride.
+- [`STATISTIK_DESKRIPTIF_DAN_EDA.md`](STATISTIK_DESKRIPTIF_DAN_EDA.md): EDA train-only pipeline Rafif (13 channel → 39 fitur, n=26.723, Pearson+Spearman, attrition fase A, embargo fase B).
+- [`clean-pipeline-56-32/protocol.json`](clean-pipeline-56-32/protocol.json): kontrak tumbling 60/60, 13 channel, split 70:30 + embargo ≥1 jam, scaler train-only.
+- [`clean-pipeline-56-32/scripts/prepare_windows.py`](clean-pipeline-56-32/scripts/prepare_windows.py): definisi 11 raw + 2 proxy (`Hydraulic_P`, `Mech_P`), fitur mean/std/delta, gap reset, coverage gate 54/60.
+- [`clean-pipeline-56-32/outputs/metrics/train_descriptive_stats.csv`](clean-pipeline-56-32/outputs/metrics/train_descriptive_stats.csv): sumber tabel 39 fitur Train.
+- [`clean-pipeline-56-32/outputs/metrics/train_pearson_corr.csv`](clean-pipeline-56-32/outputs/metrics/train_pearson_corr.csv) dan [`clean-pipeline-56-32/outputs/metrics/train_spearman_corr.csv`](clean-pipeline-56-32/outputs/metrics/train_spearman_corr.csv): matriks korelasi 39×39 Train.
+- [`clean-pipeline-56-32/outputs/manifests/phase_a_manifest.json`](clean-pipeline-56-32/outputs/manifests/phase_a_manifest.json) dan [`clean-pipeline-56-32/outputs/manifests/phase_b_manifest.json`](clean-pipeline-56-32/outputs/manifests/phase_b_manifest.json): bukti attrition, split, embargo, hash, dan `fit_rows == 26723`.
+- [`src/kaggle_utils.py`](src/kaggle_utils.py): implementasi `clean_frame()` dan `build_windows()` upstream yang menjadi dasar diagnosis sentinel/gap/stride.
 - [`src/run_clustering_eval.py`](src/run_clustering_eval.py): implementasi scaler, windowing, grid metrik, serta refit `BEST_K` upstream.
+- [`reports/03-sintesis/tahap2_final.md`](reports/03-sintesis/tahap2_final.md): arsip EDA upstream 8-sensor global (bukan isi dokumen STATISTIK saat ini).
 - [`reports/03-sintesis/tahap3_final.md`](reports/03-sintesis/tahap3_final.md): klaim hasil, `BEST_K=4`, centroid, dan interpretasi rezim.
 - [`notebooks/final_clustering_outputs06/table6_cluster_share.csv`](notebooks/final_clustering_outputs06/table6_cluster_share.csv): occupancy `k=4` yang tersedia.
-- [`../clean-pipeline-56-32-plan-v1.md`](../clean-pipeline-56-32-plan-v1.md): kontrak rancangan audit baru dan batas `PLANNING_ONLY`.
-- [`../k-final-verdict.md`](../k-final-verdict.md): contoh keputusan `NO-WINNER` serta guard occupancy pada evidence audit yang tersedia.
+- [`clean-pipeline-56-32/outputs/metrics/verdict_ledger.csv`](clean-pipeline-56-32/outputs/metrics/verdict_ledger.csv): 42 verdict primer (`NO-WINNER` 38, `ELIGIBLE` 4) beserta alasan guard.
+- [`clean-pipeline-56-32/outputs/manifests/phase_c_manifest.json`](clean-pipeline-56-32/outputs/manifests/phase_c_manifest.json): bukti grid 126 run, threshold guard, dan hash output clustering.
 
 ---
 
