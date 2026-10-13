@@ -9,40 +9,51 @@ Data sensor geotermal memiliki perbedaan rentang dan satuan fisik yang sangat le
 - Rentang puluhan: Weight on Bit (klbs), Hook Load (klbs).
 - Rasio skala ekstrim: ROP : Torque mencapai 258.9 : 1.
 
-## 2. Tabel Statistik Deskriptif Sensor (Data Upstream Historis)
-Sumber: `reports/03-sintesis/tahap2_final.md` dan `notebooks/final_clustering_outputs06/table1_descriptive.csv` (subset ~200k observasi):
+## 2. Tabel Statistik Deskriptif Sensor Resmi (Train-Only 70%, clean-pipeline-56-32)
+Sumber resmi: `clean-pipeline-56-32/outputs/metrics/train_descriptive_stats.csv` ($N = 26.723$ jendela 60 detik bebas bocor):
 
-| Sensor | Satuan | Mean | Std | Min | Median | Max | Skewness | Range |
+| Fitur Kanal | Satuan/Proksi | Mean | Std (ddof=0) | Min | Median | Max | Skewness | Interpretasi Fisik |
 |---|---|---|---|---|---|---|---|---|
-| Rate of Penetration (ROP) | ft/hr | 24.91 | 100.46 | 0.00 | 0.00 | 2,860.80 | 37.63 | 2,860.80 |
-| Weight on Bit (WOB) | klbs | 7.93 | 11.08 | 0.00 | 0.00 | 66.80 | 1.45 | 66.80 |
-| Rotary RPM | RPM | 44.52 | 51.52 | 0.00 | 0.00 | 206.00 | 0.44 | 206.00 |
-| Standpipe Pressure (SPP) | psi | 1,209.39 | 1,488.61 | 0.00 | 0.00 | 4,891.00 | 0.55 | 4,891.00 |
-| Rotary Torque | kft_lb | 3.51 | 5.37 | 0.00 | 0.00 | 30.60 | 1.83 | 30.60 |
-| Hook Load | klbs | 215.11 | 43.18 | 49.30 | 218.40 | 344.80 | -0.74 | 295.50 |
-| Flow Out | % | 23.36 | 28.53 | 0.00 | 0.00 | 100.00 | 0.70 | 100.00 |
-| Differential Pressure | psi | -692.20 | 1,123.67 | -4,500.00 | 0.00 | 3,745.00 | -1.21 | 8,245.00 |
+| ROP_mean | ft/hr | 20,43 | 79,84 | 0,00 | 0,00 | 4.303,23 | 20,98 | Kecepatan penetrasi, ekor pencilan derek |
+| WOB_mean | klbs | 24,40 | 23,95 | 0,00 | 24,13 | 172,86 | 1,04 | Beban pada mata bor |
+| RPM_mean | rpm | 21,52 | 25,94 | 0,00 | 0,06 | 104,27 | 0,86 | Kecepatan putaran stang bor |
+| SPP_mean | psi | 1.603,41 | 1.536,53 | 0,00 | 1.643,31 | 5.131,09 | 0,03 | Tekanan sirkulasi hidraulik lumpur |
+| Torque_mean | kft-lb | 3,01 | 3,76 | 0,00 | 0,00 | 25,74 | 1,15 | Torsi kontak pemotongan batuan |
+| HookLoad_mean | klbs | 109,63 | 57,12 | 0,00 | 118,45 | 360,46 | 0,24 | Beban gantung traveling block |
+| Flow_mean | % | 46,26 | 34,12 | -1,48 | 66,51 | 133,66 | -0,24 | Laju alir balik lumpur pemboran |
+| PumpOut_mean | gal/min | 365,01 | 327,00 | 0,00 | 460,82 | 1.757,69 | -0,07 | Debit lumpur pemboran |
+| MudVol_mean | barrels | 407,27 | 64,36 | 195,25 | 422,88 | 597,27 | -1,08 | Kapasitas volume tangki |
+| BlockHeight_mean | feet | 80,02 | 41,43 | -8,54 | 78,96 | 192,47 | 0,37 | Elevasi ketinggian derek |
+| SPM1_mean | spm | 46,51 | 42,38 | 0,00 | 72,68 | 119,43 | -0,11 | Frekuensi kayuhan pompa 1 |
+| Hydraulic_P_mean | psi $\cdot$ GPM | $1{,}07 \times 10^6$ | $1{,}06 \times 10^6$ | 0,00 | $8{,}91 \times 10^5$ | $6{,}34 \times 10^6$ | 0,13 | Proksi daya hidraulik sirkulasi |
+| Mech_P_mean | kft-lb $\cdot$ rpm | 145,30 | 218,70 | 0,00 | 0,00 | 1.777,36 | 2,08 | Proksi daya mekanik pemotongan |
 
-*Catatan:* Angka skewness tinggi pada ROP (37.63) menunjukkan lonjakan sporadis saat formasi lunak atau penarikan pipa, memvalidasi penggunaan RobustScaler daripada Standard Normal.
+*Catatan Audit Skala:* Rasio magnitudo Daya Hidraulik ($10^6$) terhadap Torsi ($10^0$) mencapai $> 10^5 : 1$. Ini mewajibkan penskalaan fitur sebelum klasterisasi jarak Euclidean.
 
-## 3. Analisis Korelasi Antar-Sensor (Pearson Correlation Matrix)
-Temuan korelasi fisik antar-sensor utama:
-- **Sangat Kuat:** SPP ↔ Total Pump Output ($r = 0.925$): Menggambarkan dinamika hidrolika sirkulasi lumpur.
-- **Kuat:** Rotary RPM ↔ Rotary Torque ($r = 0.747$): Interaksi mekanis rotasi pahat dan gesekan formasi batuan.
-- **Moderat:** RPM ↔ SPP ($r = 0.736$) dan Hook Load ↔ Pump Output ($r = 0.697$).
-- **Lemah/Independen:** ROP ↔ WOB ($r = 0.007$): Menunjukkan laju penetrasi tidak berkorelasi linier langsung dengan beban pahat saja pada formasi granit.
+## 3. Analisis Korelasi Antar-Sensor Bebas Bocor (Train Pearson Correlation)
+Sumber: `clean-pipeline-56-32/outputs/metrics/train_pearson_corr.csv`:
+- **Kopel Hidraulik Sangat Kuat:** SPP_mean $\leftrightarrow$ PumpOut_mean ($r = 0,9575$) dan SPP_mean $\leftrightarrow$ Hydraulic_P_mean ($r = 0,9839$).
+- **Kopel Rotasi Mekanik Kuat:** RPM_mean $\leftrightarrow$ Torque_mean ($r = 0,8192$) dan RPM_mean $\leftrightarrow$ Mech_P_mean ($r = 0,9041$).
+- **Sirkulasi Lumpur:** Flow_mean $\leftrightarrow$ PumpOut_mean ($r = 0,7897$).
+- **Independensi Linier:** ROP_mean $\leftrightarrow$ WOB_mean ($r = 0,0838$), menunjukkan hubungan non-linear kompleks pada formasi granit yang menjustifikasi *unsupervised clustering*.
 
-## 4. Analisis Outlier dan Noise
-- Deteksi pencilan menggunakan metode Interquartile Range (IQR):
-  * ROP memiliki proporsi pencilan tertinggi akibat lonjakan non-operasional.
-  * SPP dan Torque menunjukkan pencilan pada transisi sambungan pipa (*pipe connection*).
-- Anomali Sentinel `-999.25`: Merupakan kode instrumen Pason untuk sensor mati/terputus, wajib dimasking menjadi NaN sebelum analisis distribusi.
+## 4. Analisis Outlier, Sentinel, dan Rekayasa Jendela
+- **Anomali Sentinel $-999{,}25$:** Masked to NaN (tidak diimputasi rata-rata).
+- **Eliminasi Anomali SPP:** Baris SPP $\le -900$ psi (29.503 baris) dibuang pada tahap pembersihan chunk.
+- **Pemisahan Segmen Waktu:** Setiap celah waktu $\ne +1$ detik memicu reset batas segmen (28 segmen kontinu, 27 reset).
+- **Jendela Tumbling 60 Detik:** Stride 60 detik (0% overlap, anti-leakage). Threshold kelengkapan $\ge 54/60$ detik valid menyaring **38.177 jendela valid**.
 
-## 5. Inventaris Artefak Visualisasi
-Tersedia di `notebooks/final_clustering_outputs06/`:
-- `fig1_correlation.png`: Heatmap matriks korelasi Pearson.
-- `fig2_boxplots.png`: Visualisasi sebaran boxplot deteksi pencilan.
-- `fig3_scaling_hist.png`: Perbandingan histogram sebelum dan sesudah standarisasi.
+## 5. Inventaris Artefak Visualisasi Resmi
+Tersedia di `clean-pipeline-56-32/outputs/figures/`:
+- `eda_correlation_heatmap.png`: Heatmap korelasi Pearson 39 fitur partisi Train.
+- `eda_scale_disparity_boxplots.png`: Boxplot disparitas skala antar kanal sensor (symlog scale).
+- `eda_scaler_comparison_distributions.png`: Perbandingan histogram distribusi sebelum dan sesudah standarisasi (Standard, Robust, MinMax).
+- `cluster_kmeans_inertia_elbow.png`: Kurva inersia Elbow K-Means Train ($k=2..8$).
+- `cluster_silhouette_train_vs_test.png` & `cluster_dbi_train_vs_test.png`: Perbandingan metrik Train vs Test multi-panel.
 
-## 6. Catatan Kritis Metodologi Audit
-Pada pipeline upstream lama, EDA ini dihitung secara global pada seluruh populasi data. Pada **Pipeline Bersih Baru (v2)**, statistik deskriptif dan fitting scaler wajib diisolasi hanya pada partisi **Train (70%)** untuk mencegah kebocoran informasi (*data leakage*) ke data uji (Test).
+## 6. Audit Kesimpulan Penskalaan (Phase C Ledger)
+Pada evaluasi klasterisasi Train vs Test:
+- **RobustScaler:** Terdiskualifikasi sebagai **`NO-WINNER`** akibat *Cluster Collapse* katastropik (99,25% data menumpuk di C0). Silhouette tinggi ($0{,}8822$) terbukti merupakan ilusi geometris isolasi pencilan.
+- **StandardScaler:** Terdiskualifikasi sebagai **`NO-WINNER`** akibat *Sharp Test Drop* (Silhouette anjlok $> 0{,}16$) dan kolaps pada C2/C3 ($<1\%$).
+- **MinMaxScaler:** Ditetapkan sebagai satu-satunya pemenang resmi (**`ELIGIBLE`**) pada K-Means $k=4$, menghasilkan partisi sehat (proporsi min 12,36%), Silhouette stabil (Train 0,3104 / Test 0,2677), DBI (Train 1,5715 / Test 2,0611), dan kestabilan stokastik ARI 0,9997.
+
