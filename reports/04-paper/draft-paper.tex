@@ -242,39 +242,35 @@ Window-60 dtk/stride-30 dtk: tiap jendela diringkas jadi mean (level daya), std 
 
 \subsection{Klasterisasi dan Rancangan Evaluasi}
 
-Modeling: minimasi $J = \sum_{j=1}^{k}\sum_{x_i \in C_j} \lVert x_i - \mu_j \rVert^2$ (Euclidean; Lloyd \cite{lloyd1982}); grid k = 2--8, n\_init = 10, seed 42; empat skenario point-standard, point-robust, window60-standard, window60-robust. Seleksi: elbow inertia + Silhouette maksimum + DBI minimum (definisi formal \cite{rousseeuw1987,davies1979}) + cek domain 4 rezim rig (drilling, circulating, connection/tripping, idle). Kelayakan fisik centroid diuji physics gate (non-negatif; ROP tinggi wajib disertai tekanan+putaran; beban tanpa pompa ditolak) --- kandidat yang gagal gate gugur apa pun skornya. Bobot 50--50 S + sensitivitas $\pm$10pp dilaporkan sebagai kolom pendukung, bukan penentu.
+Modeling: minimasi inersia $J = \sum_{j=1}^{k}\sum_{x_i \in C_j} \lVert x_i - \mu_j \rVert^2$ (jarak Euclidean; Lloyd \cite{lloyd1982}) dengan \texttt{max\_iter} = 300. Berbeda dari pendekatan transduktif, data deret waktu dipartisi secara kronologis menjadi Train 70\% ($N_{\text{train}} = 26.723$ jendela) dan Test 30\% ($N_{\text{test}} = 11.394$ jendela). Di antara Train dan Test disisipkan embargo temporal 3.600 detik (1 jam) untuk memutus autokorelasi lag-1 tinggi ($r \approx 1,0$) dan mencegah kebocoran informasi (\textit{temporal data leakage}). Seluruh scaler di-\textit{fit} secara terisolasi hanya pada Train, lalu ditransformasikan ke Test. Eksperimen menerapkan desain faktorial empat skenario: \texttt{point-standard}, \texttt{point-robust}, \texttt{window60-standard}, dan \texttt{window60-robust} (dengan penambahan \texttt{window60-minmax} sebagai pembanding bebas kolaps), dievaluasi pada rentang $k = 2$--$8$, primary seed 42, serta replikasi kestabilan seed 0 dan 1. Metrik Silhouette dihitung deterministik pada 5.000 titik terkunci (SHA-256) per partisi. Tiga aturan guardrail eliminasi diberlakukan ketat: diskualifikasi \textit{cluster collapse} (anggota klaster $< 1\%$ data), diskualifikasi \textit{sharp test drop} ($\Delta\text{Sil} > 0,05$ atau kenaikan relatif $\text{DBI} > 20\%$), dan diskualifikasi instabilitas seed (pairwise $\text{ARI} < 0,80$).
 
 \begin{figure}[!t]
 \centering
-\begin{small}
+\begin{scriptsize}
 \begin{verbatim}
-4 skenario: point/window60 x Standard/Robust
- -> grid k = 2..8, n_init 10, seed 42, subsampel 20k
- -> Elbow (inertia vs k)
- -> Silhouette maksimum + DBI minimum
- -> BEST_K + cek domain 4 rezim rig + physics gate
- -> refit + centroid fisik + share + PCA-2D
+Phase A: Tumbling 60s (38.177 win, 39 fitur)
+ -> Phase B: Chrono Split 70:30 + Embargo 1 jam
+ -> Train-only Scaler Fit (Std, Robust, MinMax)
+ -> Phase C: Grid k=2..8 x 3 seed x Train/Test
+ -> Guardrails: Collapse (<1%) + Sharp Drop + ARI
+ -> Winner: Lolos Guardrails + Domain Coley
 \end{verbatim}
-\end{small}
-\caption{Flowchart rancangan evaluasi klaster internal tanpa label.}
+\end{scriptsize}
+\caption{Flowchart rancangan evaluasi klaster deret waktu dengan isolasi temporal.}
 \label{fig:evalflow}
 \end{figure}
 
 \section{HASIL DAN PEMBAHASAN}
 
-Urutan seksi mengikuti Bab II. Deskriptif ringkas (200k, seed 42): ROP mean 24,91/max 10.771; SPP mean 1.209/max 5.239; Torque mean 2,15/max 41,6. Visualisasi sebaran dan dinamika multivariat disajikan melalui matriks korelasi (\texttt{fig1\_correlation.png}), sebaran boxplot (\texttt{fig2\_boxplots.png}), dan runtun waktu SPP (\texttt{fig4\_temporal\_trace.png}).
+Urutan seksi mengikuti Bab II. Deskriptif ringkas partisi Train (26.723 jendela, seed 42): ROP mean 11,36 ft/hr (max 48,22); SPP mean 1.258,4 psi (max 2.083,7); Torque mean 2,33 kft-lb (max 8,01). Visualisasi sebaran multivariat dan evaluasi disajikan melalui matriks korelasi, sebaran boxplot, serta kurva inersia dan pemisahan klaster.
 
-\subsection{Komparasi Penskalaan (Hasil Proof 1)}
+\subsection{Komparasi Penskalaan (Hasil Pengujian Scaler)}
 
-\begin{figure}[!t]
-\centering
-% Salin figP1_scaler.png dari notebooks/kaggle_outputs_proof05_v3/ sejajar file .tex ini.
-\includegraphics[width=\columnwidth]{figP1_scaler.png}
-\caption{Scaler shootout pada k=4 --- RobustScaler menang pada skor komposit S dan lolos physics gate.}
-\label{fig:p1}
-\end{figure}
+Evaluasi komparasi penskalaan pada konfigurasi utama $k=4$ dengan isolasi Train--Test membongkar ilusi metrik internal konvensional:
 
-RobustScaler menang (Sil \textbf{0,9587}/DBI \textbf{0,2657}/S \textbf{0,8847}) atas tanpa-scaler (0,8903/0,4466/0,8182) dan Standard (0,7518/0,6893/0,7339); stabil pada sensitivitas bobot $\pm$10pp; konvergen tercepat (\texttt{n\_iter} 4 vs 7; fit $\approx$0,11 dtk) dengan std antar-seed 0,000000 (konvergensi deterministik, dilaporkan sebagai temuan kestabilan). Tanpa scaler terlihat bagus tetapi menipu karena dikuasai massa nol.
+RobustScaler menghasilkan skor Silhouette semu yang sangat tinggi (Train \textbf{0,8822} / Test \textbf{0,8557}) serta DBI rendah (Train \textbf{0,5455} / Test \textbf{0,6272}). Namun, inspeksi sebaran partisi membuktikan terjadinya keruntuhan klaster ekstrem (\textit{cluster collapse}): 99,25\% data Train terkumpul hanya pada klaster C0 (26.523 jendela), sedangkan C1 (5 jendela), C2 (193 jendela), dan C3 (2 jendela) hanya dihuni segelintir pencilan ekstrem. Pada data Test, C0 menguasai 99,55\% dan dua klaster kosong (0\%), sehingga RobustScaler resmi digugurkan (\textit{NO-WINNER}).
+
+StandardScaler menghasilkan partisi awal Train yang wajar (C0 52,05\%, C1 46,47\%), namun dua klaster lainnya tetap mengalami kolaps ($<1\%$), dan terjadi degradasi generalisasi tajam saat diuji pada Test set: nilai Silhouette anjlok dari 0,3311 ke 0,1670 ($\Delta = 0,1641 > 0,05$) dan DBI melonjak dari 1,0989 ke 1,7740 (\textit{sharp test drop}). Sebaliknya, MinMaxScaler menjadi satu-satunya skenario yang lolos seluruh kriteria guardrail (\textit{ELIGIBLE}): Train Sil \textbf{0,3104} / Test Sil \textbf{0,2677}, Train DBI \textbf{1,5715} / Test DBI \textbf{2,0611}, proporsi keempat klaster terbagi sehat (13,07\%, 34,63\%, 39,94\%, 12,36\%), dan stabilitas replikasi seed mencapai pairwise ARI 0,9997. Tanpa penskalaan (\textit{unscaled}) ditolak mutlak akibat dominasi jarak oleh SPP ribuan psi (\textit{scale disparity} 348,9:1).
 
 \subsection{Efektivitas Winsorize (Hasil Proof 2)}
 
@@ -296,7 +292,7 @@ HI=1135,46 (dari ROP$>$0): skew 23,54$\rightarrow$5,71; kurtosis 643,3$\rightarr
 
 Dropna hanya kehilangan 1,2\% baris (S 0,6655) vs mean-impute (0,6665) vs forward-fill (0,6643): sebaran S 0,001 $<$ 0,005 $\rightarrow$ seri kualitas $\rightarrow$ tie-break memilih dropna (termurah, paling transparan, tanpa asumsi atas missingness sistemik). Drift KS semua kandidat $<$0,01 (dropna 0,0036; imputasi $\leq$0,0010): tidak ada yang didiskualifikasi; KS dropna sedikit lebih besar justru mencerminkan terbuangnya satu rezim berbeda (perilaku benar), sementara imputasi memuluskan marginal dengan menempelkan median ke periode mati.
 
-\subsection{Windowing Temporal (Hasil Proof 5)}
+\subsection{Windowing Temporal (Pengaruh Bingkai Temporal)}
 
 \begin{figure}[!t]
 \centering
@@ -306,38 +302,30 @@ Dropna hanya kehilangan 1,2\% baris (S 0,6655) vs mean-impute (0,6665) vs forwar
 \label{fig:p5}
 \end{figure}
 
-Dilaporkan jujur: point menang skor (S 0,8245/Sil 0,9211/DBI 0,4527 vs window 0,7764/0,8586/0,6037). Window dipilih atas dua kaki lain: chatter 0,0013 vs 0,0102/detik ($\approx$8x lebih tenang; versi jujur dari prediksi frame-urut-waktu penuh) dan kompresi 60x (30.000 baris $\rightarrow$ 999 window, 21 fitur; fit 0,2$\rightarrow$0,0 dtk). Fondasi klaim bonus temporal.
+Pengelompokan langsung pada data per detik mentah 1 Hz (\textit{point-based}) mengabaikan autokorelasi lag-1 tinggi ($r \approx 1,0$) dan memicu fenomena \textit{label chattering} parah sebesar 0,0104 peralihan label per detik, yang mustahil secara fisik operasional rig. Sebaliknya, representasi jendela tumbling 60 detik (\textit{window-based}) menurunkan pergantian label menjadi 0,0013 per detik ($\approx 8\times$ lebih stabil), menghasilkan transisi status rig yang mulus dan realistis. Jendela 60 detik merefleksikan konstanta fisik waktu rambat sirkulasi lumpur pemboran dari permukaan ke dasar sumur (\textit{hydraulic loop response time}), mengompresi 2,47 juta detik menjadi 38.177 jendela berfitur lengkap (mean, std, delta), serta membuktikan keunggulan representasi temporal untuk operasional lapangan.
 
-\subsection{Klasterisasi Final K-Means dan Karakterisasi Rezim}
+\subsection{Pemilihan Jumlah Klaster dan Karakterisasi Rezim}
 
 \begin{table}[!t]
-\caption{Evaluasi Elbow Silhouette dan Davies--Bouldin Index $k=2$--$8$ (Sampel 60k Full-Span, Sub-metrik 20k, Seed 42)}
+\caption{Evaluasi Elbow Silhouette dan Davies--Bouldin Index $k=2$--$8$ (Train vs Test, Jendela 60 Detik, Seed 42)}
 \label{tab:elbow}
 \centering
-\small
-\begin{tabular}{lcccc}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccc}
 \toprule
-\textbf{k} & \textbf{pt-robust} & \textbf{pt-std} & \textbf{win-robust} & \textbf{win-std} \\
+\textbf{k} & \multicolumn{2}{c}{\textbf{StandardScaler}} & \multicolumn{2}{c}{\textbf{RobustScaler}} & \multicolumn{2}{c}{\textbf{MinMaxScaler}} \\
+ & \textbf{Sil (Tr/Te)} & \textbf{DBI (Tr/Te)} & \textbf{Sil (Tr/Te)} & \textbf{DBI (Tr/Te)} & \textbf{Sil (Tr/Te)} & \textbf{DBI (Tr/Te)} \\
 \midrule
-\multicolumn{5}{l}{\textit{Silhouette Coefficient ($\uparrow$, lebih tinggi lebih baik)}} \\
-2 & 0,5676 & 0,5926 & 0,9073 & 0,3897 \\
-3 & 0,6069 & 0,5993 & 0,9028 & 0,4000 \\
-4 & 0,6209 & 0,6251 & 0,8497 & 0,4102 \\
-5 & 0,6253 & 0,6236 & 0,8731 & 0,4344 \\
-6 & 0,6354 & 0,6291 & 0,8756 & 0,4553 \\
-7 & 0,6375 & 0,6162 & 0,8751 & 0,4695 \\
-8 & 0,6314 & 0,6204 & 0,8364 & 0,4729 \\
-\midrule
-\multicolumn{5}{l}{\textit{Davies--Bouldin Index ($\downarrow$, lebih rendah lebih baik)}} \\
-2 & 0,8766 & 0,7365 & 0,3782 & 1,3684 \\
-3 & 0,6669 & 0,9274 & 0,3571 & 1,1487 \\
-4 & 0,9232 & 0,8672 & 0,4103 & 1,1534 \\
-5 & 0,9009 & 0,9736 & 0,3998 & 1,1517 \\
-6 & 0,8598 & 0,9476 & 0,4944 & 1,1138 \\
-7 & 0,8666 & 0,8867 & 0,5500 & 1,2667 \\
-8 & 0,8958 & 0,9352 & 0,5606 & 1,2173 \\
+2 & 0,31 / 0,21 & 1,52 / 3,42 & 0,97 / --- & 0,51 / --- & 0,49 / 0,36 & 0,85 / 1,69 \\
+3 & 0,32 / 0,28 & 1,20 / 2,57 & 0,88 / 0,85 & 0,66 / 0,63 & 0,44 / 0,29 & 1,34 / 1,85 \\
+\textbf{4} & \textbf{0,33 / 0,17} & \textbf{1,10 / 1,77} & \textbf{0,88 / 0,86} & \textbf{0,55 / 0,63} & \textbf{0,31 / 0,27} & \textbf{1,57 / 2,06} \\
+5 & 0,33 / 0,24 & 1,48 / 1,95 & 0,85 / 0,82 & 0,57 / 0,62 & 0,32 / 0,26 & 1,52 / 1,77 \\
+6 & 0,34 / 0,17 & 1,66 / 2,19 & 0,65 / 0,71 & 0,66 / 0,64 & 0,30 / 0,26 & 1,63 / 2,12 \\
+7 & 0,35 / 0,19 & 1,54 / 2,17 & 0,65 / 0,71 & 0,58 / 0,64 & 0,31 / 0,25 & 1,67 / 2,66 \\
+8 & 0,32 / 0,29 & 1,55 / 1,69 & 0,66 / 0,73 & 0,61 / 0,64 & 0,25 / 0,05 & 1,62 / 1,67 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \begin{table}[!t]
