@@ -1,0 +1,7 @@
+{
+  "source_path": "Datmin-new/dataset/56-32 1sec data 27029986.csv",
+  "expected_sha256": "fed92fa2a75c3a2c600dca558aa0e6c38d871f242fa98f1f09a06279e7357f4c",
+  "format": "CSV",
+  "sampling": "1 Hz",
+  "status": "referenced; verified during Phase A execution"
+}

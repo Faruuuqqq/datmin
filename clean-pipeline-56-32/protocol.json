@@ -1,0 +1,42 @@
+{
+  "protocol_version": "1.0",
+  "well": "56-32",
+  "phase_a": {
+    "input_frequency_hz": 1,
+    "read_mode": "pandas_csv_chunked",
+    "chunksize": 50000,
+    "numeric_dtype": "float64",
+    "timestamp_format": "%Y/%m/%d %H:%M:%S",
+    "drop_rule": "SPP <= -900",
+    "sentinel": -999.25,
+    "sentinel_action": "mask_sensor_values_to_NaN_after_SPP_row_drop",
+    "segment_reset": "timestamp delta after row-drop is not exactly +1 second",
+    "window_seconds": 60,
+    "stride_seconds": 60,
+    "overlap_percent": 0,
+    "window_anchor": "first retained row of each segment",
+    "tail_policy": "discard_partial_segment_tail",
+    "channels": 13,
+    "coverage_minimum_per_channel": 54,
+    "features_per_channel": ["mean", "population_std_ddof_0", "endpoint_delta_last_finite_minus_first_finite"],
+    "features_total": 39
+  },
+  "phase_b": {
+    "split": "chronological",
+    "train_fraction": 0.7,
+    "test_fraction": 0.3,
+    "embargo_seconds_minimum": 3600,
+    "scaler_fit_scope": "train_only",
+    "candidate_scalers": ["StandardScaler", "RobustScaler", "MinMaxScaler"]
+  },
+  "phase_c": {
+    "models": ["KMeans", "GaussianMixture"],
+    "k_values": [2, 3, 4, 5, 6, 7, 8],
+    "fit_scope": "train_only",
+    "evaluate_separately": ["train", "test"],
+    "metrics": ["silhouette", "davies_bouldin", "occupancy", "collapse"],
+    "unstable_or_collapsed_outcome": "NO-WINNER",
+    "cluster_label_format": "C0..Ck",
+    "physical_regime_claim": "requires_driller_log_or_independent_domain_validation"
+  }
+}

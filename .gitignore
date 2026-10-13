@@ -32,3 +32,9 @@ venv/
 *.synctex.gz
 *.fls
 *.fdb_latexmk
+
+# Clean pipeline 56-32: ignore heavy intermediate data, track metrics csv
+clean-pipeline-56-32/data/processed/
+clean-pipeline-56-32/data/splits/
+!clean-pipeline-56-32/outputs/metrics/*.csv
+

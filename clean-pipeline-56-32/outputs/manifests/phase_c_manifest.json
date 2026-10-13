@@ -1,0 +1,71 @@
+{
+  "phase": "C",
+  "run_count": 126,
+  "primary_seed_run_count": 42,
+  "verdict_count": 42,
+  "feature_count": 39,
+  "fit_scope": "train_only",
+  "train_rows": 26723,
+  "test_rows": 11394,
+  "grid": {
+    "scalers": [
+      "standard",
+      "robust",
+      "minmax"
+    ],
+    "algorithms": [
+      "kmeans",
+      "gmm"
+    ],
+    "k_values": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "seeds": [
+      42,
+      0,
+      1
+    ]
+  },
+  "silhouette": {
+    "sample_size": 5000,
+    "seed": 42,
+    "train_indices_sha256": "34a2f65b990b4405ec5db8ec497e61c02a48f87effb4230a8d03de2368ff5e6b",
+    "test_indices_sha256": "28310617cb564ec70618d4799c32d012804687d15bf08487d67cd9fd82644fbb"
+  },
+  "thresholds": {
+    "collapse_proportion_lt": 0.01,
+    "silhouette_range_gt": 0.05,
+    "dbi_relative_range_gt": 0.2,
+    "pairwise_ari_lt": 0.8
+  },
+  "status_counts": {
+    "NO-WINNER": 38,
+    "ELIGIBLE": 4
+  },
+  "primary_collapse_runs": 27,
+  "primary_non_convergent_runs": 0,
+  "input_sha256": {
+    "outputs/manifests/phase_b_manifest.json": "68b19f286c6d803ecbbb8186b7eeaba2c318d9c0f54fc3e9ba9bdefe199819a8",
+    "data/splits/scaled/train_standard.csv": "f63b2541a48594de146da62a71f28815370f28eb098d8187172e79b472fcec3f",
+    "data/splits/scaled/test_standard.csv": "10505815a52754192106a31cea6ed474a976afd9d4ae400cf04660279416ff68",
+    "data/splits/scaled/train_robust.csv": "d4bb91d15ec9b181f59119ab146abc5c7f9c9956baa6781e523da501a1df1a4f",
+    "data/splits/scaled/test_robust.csv": "b45fb3893bbdcbedc1dfe7bbbf2b5b84280e5a7a7520a3ddf93271180ff3482e",
+    "data/splits/scaled/train_minmax.csv": "8c94ef31c4bf26298b279704ab11954f346c069f35da715dedc217ec6dda6eaa",
+    "data/splits/scaled/test_minmax.csv": "8dd1fe1e01d2fdb8a2be6315a2cbfe791cbc95d4dc689cd9f0b9fefbb261ba83"
+  },
+  "output_sha256": {
+    "outputs/metrics/clustering_results_all.csv": "4449f564bef205d90c0c3c8f77d66478d6c3f73e8923d4148a9279cd58f22547",
+    "outputs/metrics/clustering_summary_primary42.csv": "bbd942f053acdbcc418b48ab268357deb356abbcb2f507941c17a5e9b1965dd8",
+    "outputs/metrics/verdict_ledger.csv": "de6095a2b62b209976a3efbec95dd0f720086ea35b3fb9dea53bc4752182b30f",
+    "outputs/figures/cluster_silhouette_train_vs_test.png": "0f5c11f1f9a6e2440c0936e7f2d00b2ab9a2350b1a99f42b72ba118020f37988",
+    "outputs/figures/cluster_dbi_train_vs_test.png": "4835b0fd02dd36f8724f80345f2864170bc539b16a2194e884c3f7cb8a3ab813",
+    "outputs/figures/cluster_kmeans_inertia_elbow.png": "3a81713d4ebaca53c4a02aa78639736e53afdb8063f87f8f2f92f3f770ba19a2"
+  },
+  "runtime_seconds": 1299.92
+}
