@@ -1,79 +1,195 @@
-# datmin — Multivariate Geothermal Drilling Sensor Clustering (Utah FORGE 56-32)
+# Repositori Proyek UTS Data Mining — Analisis Sensor Geotermal Well 56-32 & Audit Metodologi Deret Waktu
 
-UTS Data Mining (S1 Informatika): unsupervised regime discovery pada data sensor rig
-geotermal 1 Hz tanpa label — komparasi **StandardScaler vs RobustScaler** ×
-**point-based vs sliding-window**, clustering **K-Means**, evaluasi
-**Silhouette + Davies–Bouldin + Elbow**.
+> **Proyek Ujian Tengah Semester (UTS) Data Mining — S1 Informatika**  
+> **Topik:** *Multivariate Geothermal Drilling Sensor Clustering & Time-Series Methodology Audit*  
+> **Studi Kasus:** Sensor Pason 1 Hz rig pemboran sumur panas bumi Utah FORGE Well 56-32 (2.506.360 rekaman baris × 22 kolom).
 
-## Dataset
+---
 
-- Utah FORGE Well 56-32, Pason 1 Hz, 2.506.360 baris × 22 kolom → **8 sensor utama**
-  (ROP, WOB, RPM, SPP, Torque, Hookload, Diff Press, Pump Out).
-- Hosting: Kaggle `faruqmahdison/utah-datmin` (CSV mentah 340 MB **tidak** di-commit,
-  lihat `.gitignore`). Spesifikasi: `dataset/tugas.txt`, `dataset/infodataset.txt`.
-- Penyakit terukur (Colab 200k, seed 42): rasio skala **258.9:1**, sentinel `-999.25`,
-  outlier ROP 8.65%, SPP–Pump r=0.925, autocorr lag-1 ≈ 1.0.
+## 1. Status & Ringkasan Eksekutif
 
-## Alur kerja & file kunci
+Repositori ini mengintegrasikan **dua lintasan arsitektur (Dual-Track Architecture)** untuk menjawab tantangan klasterisasi deret waktu sensor pemboran geotermal tanpa supervisi:
 
-| Tahap | Isi | File |
-|---|---|---|
-| PRISMA (Tahap 1) | Query Q-RAW v6 (740) → Q-FILTERED (175) → screening 127 → sought 70 → **inklusi 9** | `reports/01-protokol-prisma/prisma.restart.v6.md`, `reports/01-protokol-prisma/prisma.diagram.md` |
-| Screening jejak | Export Scopus, vote Pass-1/Pass-2, sought, eligibility | `reports/02-data-screening/screening-*.csv`, `reports/02-data-screening/sought_list.csv`, `reports/02-data-screening/eligibility_16.csv` |
-| Final + backup | Tabel 9 final + 7 backup + supporting refs | `reports/02-data-screening/tabel_final_backup.md` |
-| EDA (Tahap 2) | Taksonomi, deskriptif, sentinel/outlier, korelasi, preprocessing plan | `reports/03-sintesis/tahap2_final.md` |
-| Clustering (Tahap 3) | Desain 4 skenario × k=2–8, hasil elbow real, limitasi jujur | `reports/03-sintesis/tahap3_final.md` |
-| Paper | Draft IEEE (Bab I–IV + pustaka) | `reports/04-paper/draft_paper_ieee.md` |
-| Diagram | Generator + PNG/PDF/SVG | `src/generate_prisma.py`, `figures/` |
-| Gen-AI | Deklarasi penggunaan AI (wajib tugas) | `reports/04-paper/deklarasi_genai.md` |
-
-## Cara jalan
-
-```bash
-# Diagram PRISMA (angka terkunci di konstanta atas file)
-py src/generate_prisma.py        # output -> figures/prisma_flowchart_restart_v6.{png,pdf,svg}
-
-# EDA penyakit (Colab; pilih upload manual ATAU Kaggle)
-# notebooks/00_cek_penyakit_colab.ipynb  (cadangan .py)
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       ARSITEKTUR DUAL-TRACK REPOSITORI                      │
+├─────────────────────────────────────────┬───────────────────────────────────┤
+│ Track 1: Baseline Eksplorasi Legacy    │ Track 2: Clean Pipeline v2        │
+│ (`notebooks/00_`–`06_`, `src/`)         │ (`clean-pipeline-56-32/`, `07_`) │
+├─────────────────────────────────────────┼───────────────────────────────────┤
+│ • Eksplorasi awal & investigasi sensor  │ • Pipeline produksi bebas leakage │
+│ • Perbandingan point vs sliding window  │ • Tumbling 60s non-overlapping    │
+│ • StandardScaler vs RobustScaler global │ • Train-only scaler (chrono 70:30)│
+│ • Prior k=4 & interpretasi kualitatif   │ • Embargo temporal >= 1 jam       │
+│ • Menjadi objek audit metodologis       │ • Evaluasi Train/Test & NO-WINNER │
+└─────────────────────────────────────────┴───────────────────────────────────┘
 ```
 
-## Ambil dataset via kagglehub
+1. **Track 1 (Baseline Eksplorasi Legacy):** Rekaman jejak awal penelitian yang berfokus pada identifikasi "penyakit" data sensor (sentinel `-999.25`, skala jomplang 258.9:1, outlier ROP 8.65%, autokorelasi lag-1 ≈ 1.0) dan eksperimen perbandingan skenario standar.
+2. **Track 2 (Clean Pipeline v2):** Refaktor metodologis penuh yang menerapkan protokol deret waktu ketat bebas kebocoran data (*leakage-free*). Seluruh keputusan pemodelan diisolasi pada partisi *Train*, dievaluasi secara independen pada partisi *Test* ter-embargo, serta mengadopsi prinsip evaluasi jujur berbasis integritas saintifik (*rejection option / NO-WINNER*).
 
-Dataset: https://www.kaggle.com/datasets/faruqmahdison/utah-datmin
+---
+
+## 2. Tabel Ringkasan Masalah & Solusi Metodologis
+
+Hasil audit komprehensif terhadap arsitektur deret waktu lama menghasilkan transformasi sistematis pada pipeline baru:
+
+| Dimensi | Pendekatan Baseline Legacy | Solusi Clean Pipeline v2 | Dampak Ilmiah |
+|---|---|---|---|
+| **Windowing & Leakage** | Sliding window 60s, stride 30s (tumpang-tindih **50%** antar window bersebelahan). | **Tumbling window 60s, stride 60s (0% overlap)**, dilengkapi *gap reset* pada selisih waktu > 1 detik. | Mencegah kebocoran informasi temporal antar-sampel; menjamin independensi unit analisis. |
+| **Isolasi Penskalaan (Scaling)** | `fit_transform()` global pada seluruh dataset sebelum evaluasi. | **Train-Only Scaling**: Scaler (`StandardScaler`, `RobustScaler`, `MinMaxScaler`) hanya di-*fit* pada data Train (70%), Test (30%) murni di-*transform*. | Mencegah kebocoran distribusi masa depan (*look-ahead bias*) ke dalam proses pemodelan. |
+| **Pemisahan Temporal** | Tidak ada partisi waktu formal; evaluasi dilakukan pada sampel campuran. | **Kronologis 70:30 dengan Embargo Temporal >= 3.600 detik (1 jam)** di antara Train dan Test. | Mengeliminasi korelasi residual autokorelasi tinggi pada batas partisi. |
+| **Integritas Sampel** | `-999.25 → dropna()` langsung tanpa memperhatikan diskontinuitas waktu. | **Coverage Gating**: Minimal 54 dari 60 detik valid (≥90%) per kanal; segmen di-*reset* jika terjadi *gap*. | Menghasilkan **38.177 window valid** (26.723 Train, 60 Embargo, 11.394 Test) berkontrak 39 fitur. |
+| **Distribusi Klaster** | *Cluster collapse* ekstrem pada `k=4`: C0 mendominasi **95,40%**, klaster minor hanya 0,71%. | **Evaluasi Multi-Seed (k=2..8)** pada K-Means & GMM; deteksi keruntuhan klaster (< 1% okupansi). | Transparansi penuh atas ketidakstabilan geometri data; menolak klaim klaster yang rapuh. |
+| **Pengambilan Keputusan** | Memaksakan `k=4` berdasarkan asumsi awal 4 rezim operasional rig. | **Hak Eksplisit Status `NO-WINNER`** jika terjadi *collapse*, *negative silhouette*, atau *sharp test drop*. | Dari 42 pasangan primer, **38 dinyatakan NO-WINNER** dan 4 berstatus ELIGIBLE tanpa fabrikasi. |
+| **Interpretasi Domain** | Centroid statistik langsung dilabeli nama rezim fisik pemboran tanpa driller log. | **Klaster dilabeli kode statistik murni (`C0..Ck`)**; batas inferensi diakui secara eksplisit. | Integritas penulisan ilmiah; klaim fisik hanya dibuka jika tersedia ground-truth log pemboran. |
+
+---
+
+## 3. Indeks Navigasi Repositori Lengkap
+
+Repositori ditata secara modular agar mudah ditelusuri dari aspek kode eksekusi, data manifest, hingga naskah publikasi:
+
+```
+datmin/
+├── clean-pipeline-56-32/       # Engine pipeline bersih Well 56-32 (v2)
+│   ├── protocol.json           # Spesifikasi protokol kontrak terkunci
+│   ├── scripts/                # Kode pipeline modular (Fase A, B, C, Contract)
+│   ├── outputs/manifests/      # Manifest JSON reproduktifitas (Fase A, B, C)
+│   ├── outputs/metrics/        # Ledger metrik evaluasi lengkap & Train EDA
+│   └── models/scalers/         # Artefak model scaler Train-only tersimpan
+│
+├── audit/                      # Artefak perencanaan, audit & roadmap lanjutan
+│   ├── clean-pipeline-56-32-plan-v1.md   # Rencana kerja & 5 strict rules 56-32
+│   ├── plan-cross-well-16a-v1.md         # Roadmap transferabilitas OOD Well 16A
+│   ├── h1-78b-negative-lock-v1.md        # Kunci negatif empiris sensor Well 78B
+│   └── perbandingan-upstream-vs-audit.md # Analisis komparatif audit mendalam
+│
+├── notebooks/                  # Koleksi Jupyter Notebook eksperimen
+│   ├── 07_clean_pipeline_walkthrough.ipynb # ⭐ Notebook utama walkthrough Fase A-C
+│   ├── 00_cek_penyakit_colab.ipynb         # Eksplorasi penyakit data 1 Hz
+│   ├── 05_preprocessing_proof.ipynb        # Pembuktian empiris efek penskalaan
+│   ├── 06_final_clustering.ipynb           # Baseline clustering historis
+│   └── ... (notebooks 01-04)
+│
+├── PERBANDINGAN_APPROACH_DAN_AUDIT_METODOLOGI.md # Dokumen pembanding metodologis
+├── STATISTIK_DESKRIPTIF_DAN_EDA.md             # Dokumen statistik deskriptif Train-only
+│
+├── reports/                    # Laporan & luaran publikasi ilmiah
+│   ├── 01-protokol-prisma/     # Protokol tinjauan literatur sistematis PRISMA
+│   ├── 02-data-screening/      # Jejak seleksi & eligibility artikel ilmiah
+│   ├── 03-sintesis/            # Gap analysis & sintesis hasil
+│   └── 04-paper/               # Naskah Paper IEEE UTS
+│       ├── draft_paper_ieee.md # Format naskah Markdown
+│       ├── draft-paper-letx.tex# Format naskah LaTeX IEEEtran
+│       ├── prisma.png          # Diagram alir PRISMA 2020 resmi
+│       └── deklarasi_genai.md  # Formulir deklarasi penggunaan Gen-AI
+│
+└── figures/                    # Visualisasi visual & diagram alir (SVG, PNG, PDF)
+```
+
+### Rincian Modul & Berkas Utama
+
+- **Notebook Utama (`notebooks/07_clean_pipeline_walkthrough.ipynb`)**:
+  * Berfungsi sebagai *single walkthrough* interaktif untuk menjalankan dan memvisualisasikan seluruh tahapan pipeline bersih: Uji Kontrak, Fase A (Windowing), Fase B (Pemisahan Temporal & Penskalaan), hingga Fase C (Klasterisasi Grid & Pelaporan *Verdict Ledger*).
+- **Pipeline Bersih (`clean-pipeline-56-32/`)**:
+  * `scripts/prepare_windows.py`: Pipeline streaming chunked data mentah, sanitasi sentinel/SPP, tumbling 60s, ekstraksi 39 fitur statistik.
+  * `scripts/split_scale.py`: Partisi kronologis 70:30, isolasi buffer embargo 3.600 detik, fitting scaler *Train-only*.
+  * `scripts/cluster_evaluate.py`: Grid search K-Means dan GMM ($k=2..8$, 3 seed acak), evaluasi metrik internal ganda, deteksi *collapse*, serta penetapan vonis *NO-WINNER*.
+  * `scripts/check_contract.py`: Rangkaian *assert-based contract checks* berbasis data sintetis untuk validasi logika sebelum pengolahan data riil.
+  * `outputs/manifests/`: Rekam jejak biner & *hash audit* (`phase_a_manifest.json`, `phase_b_manifest.json`, `phase_c_manifest.json`).
+  * `outputs/metrics/`: Berkas metrik komprehensif (`clustering_results_all.csv`, `verdict_ledger.csv`, `train_descriptive_stats.csv`, dll.).
+- **Dokumen Metodologi**:
+  * `PERBANDINGAN_APPROACH_DAN_AUDIT_METODOLOGI.md`: Analisis audit metodologis komparatif detail antara pendekatan legacy dan clean pipeline v2.
+  * `STATISTIK_DESKRIPTIF_DAN_EDA.md`: Analisis statistik deskriptif 13 kanal sensor pada partisi Train bersih ($n=26.723$).
+- **Audit & Riset Lanjutan (`audit/`)**:
+  * `clean-pipeline-56-32-plan-v1.md`: Dokumen blueprint 5 aturan ketat integritas data.
+  * `plan-cross-well-16a-v1.md`: Rencana pengujian transferabilitas *Out-of-Distribution (OOD)* ke sumur berarah Well 16A(78)-32.
+  * `h1-78b-negative-lock-v1.md`: Dokumentasi vonis negatif *unsuitable holdout* Well 78B-32 akibat anomali perangkat keras lapangan (gas & gamma tidak valid).
+- **Tinjauan Literatur & Paper IEEE**:
+  * Penelusuran literatur PRISMA 2020: 740 artikel awal $\rightarrow$ 175 tersaring $\rightarrow$ 127 telaah abstrak $\rightarrow$ 70 dinilai penuh $\rightarrow$ **9 artikel inklusi utama** + 7 artikel cadangan.
+  * Naskah lengkap IEEE format 5–8 halaman tersedia di `reports/04-paper/draft_paper_ieee.md` dan `reports/04-paper/draft-paper-letx.tex`.
+
+---
+
+## 4. Panduan Menjalankan (How to Run)
+
+### A. Persyaratan Lingkungan (Environment)
+
+Pastikan lingkungan kerja telah terpasang Python 3.10+ beserta pustaka pendukung:
+
+```bash
+pip install numpy pandas scikit-learn joblib matplotlib
+```
+
+*(Opsional: jika menggunakan `kagglehub` untuk unduhan langsung)*:
+```bash
+pip install kagglehub
+```
+
+### B. Menjalankan Uji Kontrak Sintetis (*Contract Test*)
+
+Sebelum menjalankan pipeline pada data masif 357 MB, validasi kebenaran logika windowing, penskalaan, dan vonis keputusan menggunakan skrip kontrak sintetis:
+
+```bash
+cd clean-pipeline-56-32/scripts
+python3 check_contract.py
+```
+
+*Output yang diharapkan:*
+```text
+PASS: Phase A, Phase B, and Phase C contract checks
+```
+
+### C. Menjalankan Notebook Walkthrough Utama
+
+Jalankan Jupyter Notebook dan buka berkas panduan utama:
+
+```bash
+jupyter notebook notebooks/07_clean_pipeline_walkthrough.ipynb
+```
+
+Notebook akan secara otomatis:
+1. Mendeteksi keberadaan berkas data mentah `56-32 1sec data 27029986.csv` (baik di direktori lokal `dataset/`, Kaggle Input, atau unduhan via `kagglehub`).
+2. Menjalankan Fase A: Pembentukan 38.177 window tumbling 60 detik.
+3. Menjalankan Fase B: Partisi Train (26.723), Embargo (60), dan Test (11.394) serta penskalaan data.
+4. Menjalankan Fase C: Pelatihan grid K-Means & GMM serta ekspor *verdict ledger*.
+
+### D. Mengunduh Dataset Mandiri via KaggleHub
+
+Jika dataset mentah belum tersedia di folder lokal, gunakan potongan skrip Python berikut:
 
 ```python
-# Install dependencies as needed:
-# pip install kagglehub[pandas-datasets]
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
 
-# Set the path to the file you'd like to load
 file_path = "56-32 1sec data 27029986.csv"
-
-# Load the latest version
 df = kagglehub.load_dataset(
-  KaggleDatasetAdapter.PANDAS,
-  "faruqmahdison/utah-datmin",
-  file_path,
-  # Provide any additional arguments like
-  # sql_query or pandas_kwargs. See the
-  # documenation for more information:
-  # https://github.com/Kaggle/kagglehub/blob/main/README.md#kaggledatasetadapterpandas
+    KaggleDatasetAdapter.PANDAS,
+    "faruqmahdison/utah-datmin",
+    file_path,
 )
-
-print("First 5 records:", df.head())
+print("Ukuran dataset:", df.shape)
 ```
 
-# Pipeline penuh (Kaggle, ~20-30 mnt CPU)
-# notebooks/utah_forge_56_32_geothermal_drilling_sensor_clust-fathan.ipynb
+### E. Membangun Diagram PRISMA
+
+Untuk meregenerasi diagram alir metodologi literatur PRISMA 2020:
+
+```bash
+python3 src/generate_prisma.py
+# Berkas luaran tersimpan pada: figures/prisma_flowchart_restart_v6.{png,pdf,svg}
 ```
 
-Hasil re-run lengkap (`table0–table6`, `fig1–fig6`) tersimpan di `figures/`, slot metrik di `draft_paper_ieee.md` dan `draft-paper.tex` telah terisi final, siap dikonversi ke .doc template IEEE.
+---
 
-## Status (Tervalidasi & Sinkron)
+## 5. Ringkasan Eksekusi & Artefak Akhir
 
-- [x] PRISMA 740 → 9 + backup 7 (terkunci, aritmetika pas)
-- [x] Tahap 2 final (angka real) + Tahap 3 desain + hasil awal jujur
-- [x] Draft IEEE (Bab I–II penuh; §III-B hasil tervalidasi & bebas TODO-RERUN)
-- [x] Re-run clustering pasca-perbaikan (winsorize ROP, Diff Press OFF, indexing fixed, centroid lolos uji fisika)
-- [x] Finalisasi §III-B (`table0–table6` & `fig1–fig6` di `figures/`) + siap konversi .doc / submit
+| Fase | Masukan | Keluaran Utama | Status Integritas |
+|---|---|---|---|
+| **Fase A (Windowing)** | 2.506.360 baris mentah (1 Hz) | `phase_a_manifest.json`, 38.177 window tumbling (39 fitur) | Verified (`fit_rows: 38177`) |
+| **Fase B (Split & Scale)** | 38.177 window valid | `phase_b_manifest.json`, Train: 26.723, Embargo: 60, Test: 11.394 | Verified (`fit_rows == 26723`) |
+| **Fase C (Grid Clustering)** | Matriks Train & Test terpisah | `clustering_results_all.csv`, `verdict_ledger.csv` (126 run) | Verified (38 NO-WINNER, 4 ELIGIBLE) |
+| **Paper Publikasi** | Hasil empiris & telaah pustaka | Draft IEEE LaTeX & Markdown, Deklarasi AI | Siap konversi / submit |
+
+Dokumentasi audit ini menegaskan komitmen bahwa seluruh proses pengolahan data menjunjung tinggi keterbukaan sains, reproduksibilitas eksperimental, dan kejujuran metodologis.
