@@ -60,7 +60,7 @@
 % ABSTRAK
 % ============================================================
 \begin{abstract}
-Data sensor rig pengeboran geotermal berfrekuensi 1 Hz bersifat multivariat, tidak berlabel, berskala timpang, dan memiliki autokorelasi serial yang kuat ($r \approx 1{,}0$). Makalah ini menyajikan kerangka kerja klasterisasi deret waktu tanpa kebocoran informasi (\textit{leakage-free}) pada 2.506.359 rekaman sensor sumur Utah FORGE 56-32 menggunakan K-Means dan Gaussian Mixture Models (GMM) pada 13 kanal sensor (11 sensor mentah dan 2 proksi daya fisik) yang diringkas ke dalam 39 fitur statistik jendela tumbling. Protokol pra-pemrosesan mencakup eliminasi anomali SPP ($\le -900$ psi; 29.503 baris), \textit{masking} kode sentinel $-999{,}25$ menjadi NaN, segmentasi adaptif berbasis celah waktu, serta jendela \textit{tumbling} 60 detik (stride 60 s, 0\% tumpang-tindih) dengan ambang kelengkapan data $\ge 90\%$. Evaluasi eksperimental berbasis partisi kronologis (Train 70\% / Test 30\%) dengan embargo 1 jam serta \textit{guardrail} ketat menghasilkan empat temuan fundamental. Pertama, pengujian membongkar ilusi metrik internal konvensional: \textit{RobustScaler} menghasilkan skor \textit{Silhouette} semu yang tinggi ($0{,}8822$ Train / $0{,}8557$ Test) namun mengalami keruntuhan klaster katastropik (\textit{cluster collapse}) di mana 99{,}25\% data menumpuk pada satu klaster tunggal (\textit{NO-WINNER}). Kedua, \textit{MinMaxScaler} terbukti sebagai satu-satunya skenario yang stabil dan lolos seluruh aturan baku (\textit{ELIGIBLE}) dengan \textit{Silhouette} $0{,}3104$ (Train) dan $0{,}2677$ (Test), DBI $1{,}5715$ (Train) dan $2{,}0611$ (Test), serta kestabilan stokastik ARI $0{,}9997$. Ketiga, representasi jendela 60 detik mereduksi osilasi peralihan label (\textit{label chattering}) sebesar delapan kali lipat dari $0{,}0102$ menjadi $0{,}0013$ kedipan/detik, selaras dengan konstanta respons hidraulik formasi granit. Keempat, penelusuran $k=2..8$ menetapkan $k=4$ sebagai konfigurasi optimal K-Means yang membagi data secara berimbang ke dalam empat klaster operasional rig: \textit{active drilling} (34{,}63\%), \textit{high-pressure resistant drilling} (39{,}94\%), \textit{circulation \& hole cleaning} (13{,}07\%), dan \textit{pipe connection/slips standby} (12{,}36\%).
+Data sensor rig pengeboran geotermal berfrekuensi 1 Hz bersifat multivariat, tidak berlabel, berskala timpang, dan memiliki autokorelasi serial yang kuat ($r \approx 1{,}0$). Makalah ini menyajikan kerangka kerja klasterisasi deret waktu tanpa kebocoran informasi (\textit{leakage-free}) pada 2.506.359 rekaman sensor sumur Utah FORGE 56-32 menggunakan K-Means dan Gaussian Mixture Models (GMM) pada 13 kanal sensor (11 sensor mentah dan 2 proksi daya fisik) yang diringkas ke dalam 39 fitur statistik jendela \textit{tumbling}. Protokol pra-pemrosesan mencakup eliminasi anomali SPP ($\le -900$ psi; 29.503 baris), \textit{masking} kode sentinel $-999{,}25$ menjadi NaN, segmentasi adaptif berbasis celah waktu, serta jendela \textit{tumbling} 60 detik (stride 60 s, 0\% tumpang-tindih) dengan ambang kelengkapan data $\ge 90\%$. Evaluasi eksperimental berbasis partisi kronologis (Train 70\% / Test 30\%) dengan embargo 1 jam serta \textit{guardrail} ketat menghasilkan empat temuan fundamental. Pertama, pengujian membongkar ilusi metrik internal konvensional: \textit{RobustScaler} menghasilkan skor \textit{Silhouette} semu yang tinggi ($0{,}8822$ Train / $0{,}8557$ Test) namun mengalami keruntuhan klaster katastropik (\textit{cluster collapse}) di mana 99{,}25\% data menumpuk pada satu klaster tunggal (\textit{NO-WINNER}). Kedua, \textit{MinMaxScaler} terbukti sebagai satu-satunya skenario yang stabil dan lolos seluruh aturan baku (\textit{ELIGIBLE}) dengan \textit{Silhouette} $0{,}3104$ (Train) dan $0{,}2677$ (Test), DBI $1{,}5715$ (Train) dan $2{,}0611$ (Test), serta kestabilan stokastik ARI $0{,}9997$. Ketiga, representasi jendela 60 detik mereduksi osilasi peralihan label (\textit{label chattering}) sebesar delapan kali lipat dari $0{,}0102$ menjadi $0{,}0013$ kedipan/detik, selaras dengan konstanta respons hidraulik formasi granit. Keempat, penelusuran $k=2..8$ menetapkan $k=4$ sebagai konfigurasi optimal K-Means yang membagi data secara berimbang ke dalam empat klaster operasional rig: \textit{active drilling} (34{,}63\%), \textit{high-pressure resistant drilling} (39{,}94\%), \textit{circulation \& hole cleaning} (13{,}07\%), dan \textit{pipe connection/slips standby} (12{,}36\%).
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -73,20 +73,20 @@ klasterisasi deret waktu, K-Means, sensor pengeboran geotermal, MinMaxScaler, je
 \section{Pendahuluan}
 
 \subsection{Permasalahan Data Sensor Multivariat}
-Pemantauan operasional rig pengeboran panas bumi skala besar, seperti pada sumur Utah FORGE 56-32, menghasilkan rekaman data sensor deret waktu berdimensi tinggi (\textit{multivariate time-series}) dengan frekuensi pencatatan 1 Hz (satu observasi per detik). Dataset historis yang berukuran masif ini merekam dinamika parameter mekanika dan hidraulika pengeboran tanpa disertai anotasi kejadian operasional (\textit{unlabeled data}). Oleh karena itu, pengenalan rezim operasi rig (seperti \textit{active drilling}, \textit{circulation}, \textit{tripping}, dan \textit{idle}) membutuhkan pendekatan pembelajaran mesin tak terawasi (\textit{unsupervised learning}) seperti klasterisasi K-Means.
+Pemantauan operasional rig pengeboran panas bumi skala besar, seperti pada sumur Utah FORGE 56-32, menghasilkan rekaman data sensor deret waktu berdimensi tinggi (\textit{multivariate time-series}) dengan frekuensi pencatatan 1 Hz (satu observasi per detik). Dataset historis yang berukuran sangat masif ini merekam dinamika parameter mekanika dan hidraulika pengeboran tanpa disertai anotasi kejadian operasional (\textit{unlabeled data}). Oleh karena itu, pengenalan rezim operasi rig (seperti \textit{active drilling}, \textit{circulation}, \textit{tripping}, dan \textit{idle}) membutuhkan pendekatan pembelajaran mesin tak terawasi (\textit{unsupervised learning}) seperti klasterisasi K-Means.
 
 Namun, pemrosesan aliran data sensor industri mentah menghadirkan tiga tantangan teknis fundamental yang berpotensi membiaskan pemodelan klasterisasi jika tidak ditangani secara analitis:
 
 \begin{enumerate}
-\item \textbf{Ketimpangan Skala Lintas Orde Besaran (\textit{Scale Disparity}):} Terdapat perbedaan rentang nilai numerik yang sangat ekstrem antar-sensor. Sensor hidraulik seperti \textit{Standpipe Pressure} (SPP) beroperasi pada orde ribuan (0--3.500 psi), sedangkan sensor kinetik seperti \textit{Rotary Torque} hanya bernilai puluhan (0--15 kft$\cdot$lb). Analisis variansi menunjukkan bahwa SPP dan \textit{Total Pump Output} mendominasi hingga 99{,}36\% dari total variansi sistem. Jika tidak dikalibrasi, metrik jarak \textit{Euclidean} akan secara absolut menenggelamkan sensor mekanik, sehingga algoritma praktis hanya mengklasifikasikan tekanan pompa.
+\item \textbf{Ketimpangan Skala Lintas Orde Besaran (\textit{Scale Disparity}):} Terdapat perbedaan rentang nilai numerik yang sangat ekstrem antar-kanal sensor. Sensor hidraulik seperti \textit{Standpipe Pressure} (SPP) beroperasi pada orde ribuan (0--5.131 psi), sedangkan sensor kinetik seperti \textit{Rotary Torque} hanya bernilai satuan (0--25,74 kft$\cdot$lb). Pada level proksi daya fisik, kanal turunan Daya Hidraulik ($P_{\text{hyd}} = SPP \times PumpOut$) menembus orde jutaan ($\sim 10^6$ psi$\cdot$gpm) sehingga rasio variansi lintas-fitur melebihi $10^6 : 1$. Jika tidak dikalibrasi, metrik jarak \textit{Euclidean} akan sepenuhnya didikte oleh kanal hidraulik, mereduksi informasi mekanika batuan menjadi nol.
 
-\item \textbf{Ketergantungan Waktu (\textit{Temporal Dependency}):} Fluktuasi nilai sensor industri tidak bersifat saling lepas (\textit{independent}). Pencatatan berfrekuensi 1 Hz memiliki tingkat keterikatan urutan waktu yang sangat kuat, dibuktikan dengan nilai autokorelasi lag-1 yang bertengger di atas koefisien 0{,}95. Pemrosesan data secara titik tunggal (\textit{point-based clustering}) terbukti memicu pergantian transisi label klaster yang tidak rasional (\textit{chattering} atau \textit{flickering}) tiap detiknya, serta menghilangkan konteks tren dinamika gerak mesin.
+\item \textbf{Ketergantungan Waktu (\textit{Temporal Dependency}):} Fluktuasi nilai sensor industri tidak bersifat saling lepas (\textit{independent}). Pencatatan berfrekuensi 1 Hz memiliki tingkat keterikatan urutan waktu yang sangat kuat, dibuktikan dengan nilai autokorelasi lag-1 yang bertengger di atas koefisien 0{,}98. Pemrosesan data secara titik tunggal (\textit{point-based clustering}) terbukti memicu pergantian transisi label klaster yang tidak rasional (\textit{chattering} atau \textit{flickering}) tiap detiknya, serta menghilangkan konteks tren dinamika gerak mesin.
 
-\item \textbf{Derau Sistemik dan Pencilan Ekstrem (\textit{Systemic Noise and Outliers}):} Anomali instrumen terekam dalam dua bentuk. Pertama, ketiadaan data sistemik (seperti pada sensor Gas dan \textit{Gamma Ray}) yang memunculkan nilai sentinel statis $-999{,}25$. Kedua, pencilan transien fisik (artefak), di mana variabel laju penembusan (\textit{Rate of Penetration} / ROP) mencatatkan lonjakan palsu hingga 11.145 ft/jam saat rangkaian mata bor sedang melayang di udara (\textit{off-bottom}). Selain itu, variabel \textit{Differential Pressure} memunculkan kecacatan kalkulasi bernilai negatif ($\le -900$ psi) saat pompa dimatikan.
+\item \textbf{Derau Sistemik dan Pencilan Ekstrem (\textit{Systemic Noise and Outliers}):} Anomali instrumen terekam dalam dua bentuk. Pertama, ketiadaan data sistemik (seperti pada sensor Gas dan \textit{Gamma Ray}) yang memunculkan nilai sentinel statis $-999{,}25$. Kedua, pencilan transien fisik (artefak), di mana variabel laju penembusan (\textit{Rate of Penetration} / ROP) mencatatkan lonjakan palsu hingga 4.303,23 ft/jam saat rangkaian mata bor sedang melayang di udara (\textit{off-bottom}). Selain itu, variabel \textit{Differential Pressure} memunculkan kecacatan kalkulasi bernilai negatif ($\le -900$ psi) saat pompa dimatikan.
 \end{enumerate}
 
 \subsection{Validasi Kuantitatif Ketiga Tantangan}
-Ketiga tantangan teoretis tersebut terbukti secara kuantitatif hadir di dalam dataset Utah FORGE 56-32. Eksplorasi statistik awal menunjukkan bahwa ketimpangan skala benar-benar terjadi, di mana satu sensor mendominasi 52{,}68\% total variansi dengan rasio rentang antar-sensor mencapai 348{,}9 kali lipat (ROP terhadap Torque). Ketergantungan waktu tervalidasi melalui uji autokorelasi lag-1, di mana sensor utama seperti tekanan hidraulik, putaran, dan laju penetrasi mencatatkan skor keterikatan waktu yang nyaris sempurna, masing-masing 0{,}9998; 0{,}9990; dan 0{,}9884. Terakhir, masalah derau dan pencilan terekam nyata dengan adanya persentase data mati (kode sentinel $-999{,}25$) sebesar $\sim 1{,}17\%$, serta kerusakan sebaran data akibat lonjakan kecepatan pengeboran palsu dengan nilai kemiringan (\textit{skewness}) yang sangat ekstrem hingga mencapai angka 20{,}98 dan kurtosis 643{,}3. Bukti-bukti matematis inilah yang mendasari diperlukannya tahap pra-pemrosesan data secara komprehensif sebelum pemodelan dilakukan.
+Ketiga tantangan teoretis tersebut terbukti secara kuantitatif hadir di dalam dataset Utah FORGE 56-32. Eksplorasi statistik awal yang telah dilakukan menunjukkan bahwa ketimpangan skala benar-benar terjadi, di mana kanal hidraulik (SPP) memiliki rata-rata 1.603,41 psi (maksimum 5.131,09 psi), sedangkan kanal kinetik (Torque) hanya bernilai rata-rata 3,01 kft$\cdot$lb dan median 0,00 kft$\cdot$lb. Rasio magnitudo SPP terhadap Torsi mencapai 532,7 : 1 pada kanal mentah, dan membengkak menjadi lebih dari $10^6 : 1$ saat proksi Daya Hidraulik disertakan (rata-rata $1{,}07 \times 10^6$ psi$\cdot$gpm, maksimum $6{,}34 \times 10^6$). Ketergantungan waktu tervalidasi melalui uji autokorelasi lag-1, di mana sensor utama seperti tekanan hidraulik, putaran, dan laju penetrasi mencatatkan skor keterikatan waktu yang nyaris sempurna, masing-masing 0,9998; 0,9990; dan 0,9884. Terakhir, masalah derau dan pencilan terekam nyata dengan adanya persentase data mati (kode sentinel $-999{,}25$) sebesar $\sim 1{,}17\%$, keberadaan 29.503 baris dengan SPP $\le -900$ psi sebagai artefak kalkulasi perangkat lunak, serta kerusakan sebaran data akibat lonjakan kecepatan pengeboran palsu dengan nilai kemiringan (\textit{skewness}) ekstrem mencapai 20,98 dan kurtosis 643,3. Bukti-bukti matematis inilah yang mendasari diperlukannya tahap pra-pemrosesan data secara komprehensif sebelum pemodelan dilakukan.
 
 \subsection{Tinjauan Pustaka Sistematis (PRISMA)}
 Untuk merumuskan strategi penanganan data (\textit{data preprocessing}) yang optimal dan divalidasi secara saintifik, penelitian ini merujuk pada pedoman tinjauan literatur sistematis PRISMA 2020 (\textit{Preferred Reporting Items for Systematic Reviews and Meta-Analyses}). Tahapan seleksi dilakukan dalam empat fase utama:
@@ -141,7 +141,7 @@ Standard Z-score tanpa analisis varians antar-sensor. &
 Penskalaan min-max lokal per segmen jendela. &
 Normalisasi global (\textit{StandardScaler}). &
 Standard Z-score global dengan penanganan \textit{missing data}. &
-\textbf{Komparasi multi-skema (\textit{Standard}, \textit{Robust}, \textit{MinMax}); membongkar ilusi metrik \textit{RobustScaler} (kolaps 99,25\%) \& mengukuhkan \textit{MinMaxScaler}.} \\
+\textbf{Komparasi empiris tiga skema penskalaan: \textit{StandardScaler}, \textit{RobustScaler}, dan \textit{MinMaxScaler} pada isolasi Train-only, dengan pembongkaran ilusi metrik RobustScaler.} \\
 \addlinespace
 
 \textbf{Preservasi Temporal} &
@@ -149,7 +149,7 @@ Ekstraksi fitur statistik ringkasan statis. &
 Segmentasi \textit{sliding window} berbasis HMSE. &
 Mengabaikan dependensi waktu (analisis titik statis). &
 \textit{Windowing} sekuensial untuk \textit{deep learning}. &
-\textbf{Jendela \textit{tumbling} 60 detik (stride 60 s, 0\% tumpang-tindih) berbatas kelengkapan $\ge 90\%$ dan reset adaptif segmen celah waktu.} \\
+\textbf{Jendela \textit{tumbling} 60 detik (0\% tumpang-tindih) dengan \textit{reset} adaptif pada celah sampling dan \textit{coverage gate} $\ge 54/60$ detik, dilengkapi partisi kronologis Train/Test dengan embargo temporal 1 jam.} \\
 \bottomrule
 \end{tabularx}
 \end{table*}
@@ -171,7 +171,7 @@ Filter ambang batas standar pabrik. &
 Imputasi \textit{Random Forest} + Savitzky--Golay. &
 Pembersihan outlier univariat standar. &
 Imputasi \textit{forward-fill} + filter anomali berlabel. &
-\textbf{Pemisahan kanal turunan (\textit{Diff Press}), eliminasi kanal mati (Gas \& Gamma), mitigasi artefak blok derek ROP via \textit{winsorization}.} \\
+\textbf{Pembersihan anomali kanal cacat (SPP $\le -900$ psi; 29.503 baris), \textit{masking} sentinel $-999{,}25$ menjadi NaN tanpa imputasi, serta segmentasi ulang pada celah waktu $\ne +1$ detik.} \\
 \addlinespace
 
 \textbf{Metode Klasterisasi \& Optimasi} &
@@ -179,7 +179,7 @@ K-Means, Agglomerative, DBSCAN. &
 Optimasi parameter bor berbasis K-Means. &
 K-Means, Hierarchical, GMM. &
 Klasifikasi \textit{supervised}: RF, MLP, BiLSTM. &
-\textbf{K-Means + GMM ($k \in [2, 8]$) dengan partisi kronologis Train 70\% / Test 30\%, embargo 1 jam, dan \textit{guardrails} ketat.} \\
+\textbf{Grid $3 \times 2 \times 7 \times 3 = 126$ runs (K-Means/GMM $\times$ 3 scaler $\times$ $k=2..8$ $\times$ 3 seed), dengan sistem \textit{guardrail} bertingkat (COLLAPSE, SHARP\_TEST\_DROP, UNSTABLE) dan kebebasan hasil \textit{NO-WINNER}.} \\
 \addlinespace
 
 \textbf{Interpretasi Semantik Klaster} &
@@ -187,24 +187,26 @@ Pemisahan rezim efisiensi penukar panas (\textit{fouling stage}). &
 Rekomendasi parameter bor (WOB-RPM optimum). &
 Tipe profil kurva penurunan laju produksi. &
 Deteksi kejadian berlabel (\textit{slugging}, hidrasi). &
-\textbf{Penemuan 4 rezim fisik operasi rig: \textit{Active Rotary Drilling}, \textit{High-Pressure Tight Rock Drilling}, \textit{Circulation}, dan \textit{Pipe Connection}.} \\
+\textbf{Penemuan 4 rezim operasi rig dengan distribusi berimbang: \textit{Active Rotary Drilling} (34,63\%), \textit{High-Pressure Tight Rock Drilling} (39,94\%), \textit{Circulation \& Hole Cleaning} (13,07\%), \textit{Pipe Connection/Slips Standby} (12,36\%).} \\
 \bottomrule
 \end{tabularx}
 \end{table*}
 
-Berdasarkan Tabel~\ref{tab:gap1} dan Tabel~\ref{tab:gap2}, celah penelitian yang teridentifikasi adalah belum tersedianya studi yang secara sistematis mengevaluasi tahap pra-pemrosesan secara komponen-per-komponen (\textit{step-by-step ablation}) pada klasterisasi deret waktu sensor pengeboran geotermal 1 Hz tanpa label, dengan validasi matematis dan fisik yang terukur pada sumbu-sumbu analisis yang telah dipetakan.
+Berdasarkan Tabel~\ref{tab:gap1} dan Tabel~\ref{tab:gap2}, celah penelitian yang teridentifikasi adalah belum tersedianya studi yang secara sistematis mengevaluasi tahap pra-pemrosesan secara komponen-per-komponen (\textit{step-by-step ablation}) pada klasterisasi deret waktu sensor pengeboran geotermal 1 Hz tanpa label, dengan validasi matematis, protokol anti-kebocoran informasi, dan \textit{guardrail} eliminasi yang terukur pada sumbu-sumbu analisis yang telah dipetakan.
 
 \subsection{Pernyataan Kontribusi}
-Berlandaskan pada tinjauan literatur dan kebutuhan analitis data, makalah ini mengajukan empat kontribusi utama untuk pemodelan deret waktu sensor geotermal tak berlabel:
+Berlandaskan pada tinjauan literatur dan kebutuhan analitis data, makalah ini mengajukan lima kontribusi utama untuk pemodelan deret waktu sensor geotermal tak berlabel:
 
 \begin{enumerate}
-\item \textbf{Resolusi Kualitas Instrumen dan Konstruksi Proksi Daya:} Merancang protokol penyaringan kolom fisik yang menonaktifkan saluran turunan cacat (\textit{Differential Pressure}) dan kanal sentinel mati (Gas dan Gamma Ray), serta mengintegrasikan dua proksi daya fisik (Daya Hidraulik dan Mekanik) pada 11 sensor operasional rig.
+\item \textbf{Kerangka Kerja Anti-Kebocoran Informasi (\textit{Leakage-Free Framework}):} Merancang protokol klasterisasi deret waktu yang secara ketat memisahkan partisi Train/Test secara kronologis, menyisipkan embargo temporal 1 jam untuk memutus ketergantungan autokorelasi serial ($r \approx 1{,}0$), dan mengisolasi seluruh prosedur \textit{fit} (scaler dan model) hanya pada partisi Train.
 
-\item \textbf{Evaluasi Kritis Penskalaan dan Pembongkaran Ilusi Metrik:} Melakukan evaluasi komparatif multi-skema (\textit{StandardScaler}, \textit{RobustScaler}, \textit{MinMaxScaler}) yang membongkar ilusi matematis \textit{Silhouette} semu pada \textit{RobustScaler} ($0{,}8822$ akibat keruntuhan klaster katastropik 99{,}25\%) serta menetapkan \textit{MinMaxScaler} sebagai satu-satunya skema stabil yang lolos seluruh kriteria evaluasi \textit{guardrail} bebas kebocoran data.
+\item \textbf{Pembongkaran Ilusi Metrik Internal Konvensional:} Membuktikan secara empiris bahwa skor \textit{Silhouette} tinggi pada \textit{RobustScaler} dapat menyembunyikan keruntuhan klaster katastropik (\textit{cluster collapse} 99{,}25\% data pada satu klaster tunggal), sehingga menuntut protokol evaluasi yang lebih ketat daripada sekadar membaca metrik internal.
 
-\item \textbf{Pelestarian Dimensi Temporal dan Reduksi Derau Label:} Mengembangkan ekstraksi fitur temporal berbasis jendela \textit{tumbling} 60 detik (stride 60 s, 0\% tumpang-tindih) yang menyusutkan matriks 2,5 juta baris menjadi representasi kaya konteks (39 dimensi fitur statistik pada 13 kanal), mereduksi fenomena osilasi pergantian label (\textit{chattering}) sebesar 8 kali lipat dari $0{,}0102$ ke $0{,}0013$ kedipan/detik.
+\item \textbf{Sistem \textit{Guardrail} Bertingkat untuk Validasi Klaster:} Mengimplementasikan tiga aturan eliminasi baku (\textit{COLLAPSE}, \textit{SHARP\_TEST\_DROP}, \textit{UNSTABLE}) yang secara formal mengizinkan hasil \textit{NO-WINNER} sebagai luaran yang sah, mencegah promosi konfigurasi yang secara metodologis cacat.
 
-\item \textbf{Penemuan Rezim Operasi Berbasis Fisika:} Menemukan secara mandiri struktur segmentasi operasional rig melalui optimasi model klasterisasi $k=4$ MinMaxScaler yang lolos \textit{Phase C Guardrails}, divalidasi oleh skor \textit{Silhouette}, DBI, stabilitas stokastik multi-seed, serta verifikasi kewajaran fisika operasional.
+\item \textbf{Preservasi Integritas Temporal Berbasis Celah Sampling:} Mengembangkan mekanisme \textit{segment reset} adaptif yang memutus segmen pada setiap celah waktu $\ne +1$ detik, dilengkapi \textit{coverage gate} $\ge 54/60$ detik per kanal, sehingga jendela \textit{tumbling} 60 detik merepresentasikan interval kontinu yang sah secara fisik.
+
+\item \textbf{Penemuan Rezim Operasi Rig dengan Distribusi Berimbang:} Menemukan secara mandiri struktur segmentasi operasional rig melalui konfigurasi terpilih $k=4$ \textit{MinMaxScaler}, yang membagi data menjadi empat rezim operasional dengan proporsi terkecil 12,36\%, jauh dari fenomena \textit{collapse} yang menimpa konfigurasi \textit{RobustScaler} dan \textit{StandardScaler}.
 \end{enumerate}
 
 % ============================================================
@@ -212,26 +214,23 @@ Berlandaskan pada tinjauan literatur dan kebutuhan analitis data, makalah ini me
 % ============================================================
 \section{Metodologi Pra-Pemrosesan dan Pemodelan}
 
-Bagian ini menguraikan arsitektur sistem, spesifikasi dataset, serta desain pra-pemrosesan (\textit{preprocessing}) dan pemodelan yang diterapkan untuk segmentasi rezim operasional rig geotermal secara \textit{unsupervised}.
+Bagian ini menguraikan arsitektur sistem, spesifikasi dataset, serta desain pra-pemrosesan (\textit{preprocessing}) dan pemodelan yang diterapkan untuk segmentasi rezim operasional rig geotermal secara \textit{unsupervised}. Seluruh protokol dieksekusi sebagai \textit{clean pipeline} yang terekam secara kriptografis (SHA-256) pada setiap artefak antara.
 
-\subsection{Deskripsi Dataset dan Taksonomi Sensor}
+\subsection{Deskripsi Dataset dan Taksonomi Kanal}
 Penelitian ini memproses rekaman telemetri sensor dari rig pengeboran sumur geotermal Utah FORGE 56-32. Dataset berupa deret waktu multivariat dengan frekuensi pencuplikan 1 Hz, direkam secara kontinu dari 8 Februari 2021 hingga 9 Maret 2021 (sekitar 29 hari). Dataset mentah berdimensi $2.506.359 \times 22$ (baris $\times$ kolom) tanpa adanya anotasi label operasional.
 
-Untuk menghindari distorsi dimensi dan multikolinearitas cacat, 22 kolom awal disaring berdasarkan integritas instrumen dan taksonomi mekanika fisik rig:
-\begin{itemize}
-\item Kolom spasial kedalaman lubang bor dieliminasi karena bertumbuh monoton seiring waktu dan tidak merefleksikan rezim seketika.
-\item Kolom telemetri mati (\textit{Pason Gas} dan \textit{Gamma Ray}) dieliminasi karena 100\% nilainya merupakan kode sentinel statis $-999{,}25$.
-\item Saluran \textit{Differential Pressure} dieksklusi setelah audit variansi membuktikan kanal tersebut merupakan turunan perangkat lunak yang cacat (bernilai negatif $\le -900$ psi saat pompa mati).
-\end{itemize}
-Penyaringan ini menyisakan 11 sensor operasional utama yang dikelompokkan ke dalam tiga subsistem mekanika: \textbf{Mekanik batuan dan pahat} (ROP, WOB, RPM, dan Rotary Torque), \textbf{Sirkulasi fluida hidraulik} (SPP, Total Pump Output, SPM1, Flow, dan Total Mud Volume), serta \textbf{Beban derek dan pengangkat} (Hook Load dan Block Height). Untuk memperkaya representasi interaksi antar-sensor, dibangun dua variabel proksi daya fisik:
-\begin{align}
-P_{\text{hyd}} &= \text{SPP} \times \text{PumpOut} \quad (\text{gal}\cdot\text{psi}/\text{min}) \\
-P_{\text{mech}} &= \text{Torque} \times \text{RPM} \quad (\text{kft}\cdot\text{lb}\cdot\text{rpm})
-\end{align}
-Dengan demikian, model memproses total 13 kanal operasional yang dirangkum pada Tabel~\ref{tab:taksonomi}.
+Untuk menghindari distorsi dimensi dan menangkap dinamika fisik secara komprehensif, 22 kolom awal disaring menjadi 13 kanal pemodelan yang terdiri dari 11 kanal sensor mentah dan 2 kanal proksi daya fisik turunan. Kanal-kanal tersebut dikelompokkan ke dalam tiga subsistem fungsional:
+
+\begin{enumerate}
+\item \textbf{Mekanik Batuan:} ROP (\textit{Rate of Penetration}), WOB (\textit{Weight on Bit}), RPM (\textit{Rotary RPM}), Torque (\textit{Rotary Torque}), dan Mech\_P (proksi daya mekanik $= \max(Torque,0) \times \max(RPM,0)$).
+\item \textbf{Sirkulasi Hidraulik:} SPP (\textit{Standpipe Pressure}), Flow (\textit{Flow Percent}), PumpOut (\textit{Total Pump Output}), MudVol (\textit{Total Mud Volume}), SPM1 (\textit{Pump 1 Strokes/min}), dan Hydraulic\_P (proksi daya hidraulik $= \max(SPP,0) \times \max(PumpOut,0)$).
+\item \textbf{Beban Derek dan Geometri:} HookLoad (\textit{Hook Load}) dan BlockHeight (\textit{Block Height}).
+\end{enumerate}
+
+Variabel spasial seperti kedalaman lubang dieliminasi karena bertumbuh secara monoton dan tidak merepresentasikan kinetika instrumen. Sensor analitik mati (\textit{Pason Gas} dan \textit{Gamma Ray}) dieliminasi karena hampir seluruh nilainya berupa sentinel $-999{,}25$. Saluran \textit{Differential Pressure} dieksklusi setelah audit variansi membuktikan kanal tersebut merupakan turunan perangkat lunak yang cacat, dan digantikan oleh dua proksi daya fisik yang stabil secara kalkulasi. Proses penyaringan ini menyusutkan 22 kolom menjadi 13 kanal pemodelan, dengan karakteristik statistik deskriptif pada partisi Train dirangkum pada Tabel~\ref{tab:taksonomi}.
 
 \begin{table}[!t]
-\caption{Taksonomi 13 Kanal Sensor Model dan Statistik Deskriptif (Train Set)}
+\caption{Taksonomi 13 Kanal Pemodelan Rig Utah FORGE 56-32 (Partisi Train)}
 \label{tab:taksonomi}
 \centering
 \footnotesize
@@ -254,77 +253,113 @@ MudVol       & Hidraulik   & bbl     & 407,27  & 64,36   & $-1,08$ & Total volum
 HookLoad     & Derek       & klbs    & 109,63  & 57,12   & 0,24  & Total beban rangkaian bor \\
 BlockHeight  & Derek       & ft      & 80,02   & 41,43   & 0,37  & Posisi vertikal katrol \\
 \midrule
-$P_{\text{hyd}}$ & Proksi Hidr. & psi$\cdot$gpm & $1{,}07\times 10^6$ & $1{,}06\times 10^6$ & 0,13 & Daya sirkulasi fluida \\
-$P_{\text{mech}}$ & Proksi Mek. & kft$\cdot$lb$\cdot$rpm & 145,30 & 218,70 & 2,08 & Daya mekanis pemotongan \\
+Hydraulic\_P & Proksi Hidr. & psi$\cdot$gpm & $1{,}07\times 10^6$ & $1{,}06\times 10^6$ & 0,13 & Daya sirkulasi fluida \\
+Mech\_P      & Proksi Mek. & kft$\cdot$lb$\cdot$rpm & 145,30 & 218,70 & 2,08 & Daya mekanis pemotongan \\
 \bottomrule
 \end{tabular}%
 }
 \end{table}
 
-\subsection{Penanganan Nilai Hilang, Pembersihan Anomali, dan Segmentasi Waktu}
-Pipeline pra-pemrosesan menerapkan protokol anti-kebocoran data bertahap:
-\begin{enumerate}
-\item \textbf{Pembersihan Anomali Pompa:} Sensor SPP mencatatkan anomali artefak komputasi bernilai negatif ekstrem ($\le -900$ psi) sebanyak 29.503 baris saat sistem pompa dinonaktifkan. Seluruh baris dengan $\text{SPP} \le -900$ psi dieliminasi dari matriks data mentah, menyisakan 2.476.856 baris valid.
-\item \textbf{Masking Nilai Sentinel ke NaN:} Nilai telemetri terputus yang tercatat sebagai kode sentinel $-999{,}25$ dikonversi menjadi \textit{Not a Number} (NaN) pada seluruh sensor tanpa fabrikasi nilai imputasi sintetis.
-\item \textbf{Segmentasi Celah Waktu Adaptif:} Menghindari penggabungan titik waktu yang terputus, pipeline mendeteksi interval antar-rekaman berturutan ($\Delta t = t_i - t_{i-1}$). Setiap kondisi $\Delta t \ne 1$ detik didefinisikan sebagai diskontinuitas operasional rig dan memicu pengaturan ulang segmen (\textit{segment reset}). Terdeteksi 27 titik diskontinuitas yang membagi data menjadi 28 segmen kontinu mandiri.
-\end{enumerate}
+\subsection{Pembersihan Kanal Cacat dan Integritas Temporal}
+Protokol pembersihan data mentah menerapkan tiga aturan berurutan yang saling melengkapi untuk menjamin validitas inferensi:
 
-Stabilitas distribusi pasca-penyaringan divalidasi melalui uji Kolmogorov--Smirnov (KS-Test) dua sampel:
+\textbf{Aturan 1 --- Eliminasi Anomali Kanal Cacat:} Baris dengan nilai \textit{Standpipe Pressure} (SPP) $\le -900$ psi dieliminasi pada tahap awal pemrosesan \textit{chunk} karena merepresentasikan artefak kalkulasi perangkat lunak saat pompa dimatikan. Sebanyak 29.503 baris dibuang dari 2.506.359 baris, menyisakan 2.476.856 baris valid.
+
+\textbf{Aturan 2 --- Masking Sentinel tanpa Imputasi:} Kode sentinel $-999{,}25$ yang menandakan kanal telemetri terputus dikonversi menjadi \textit{Not a Number} (NaN). Berbeda dari pendekatan imputasi linear atau \textit{mean-impute}, pipeline ini sepenuhnya menghindari fabrikasi data sintetis pada instrumen yang secara faktual sedang mati. Proksi daya fisik dihitung menggunakan fungsi $\max(\cdot, 0)$ yang mempertahankan nilai NaN, sehingga \textit{missing input} tetap menghasilkan \textit{missing output} tanpa bias.
+
+\textbf{Aturan 3 --- Segmentasi Adaptif Berbasis Celah Sampling:} Setiap selisih \textit{timestamp} antar-baris berurutan yang tidak tepat $+1$ detik memicu pemutusan segmen (\textit{segment reset}). Pendekatan ini mencegah pembentukan jendela yang melintasi celah sampling implisit akibat penghapusan baris. Tercatat 27 titik diskontinuitas yang membagi data menjadi 28 segmen kontinu mandiri, dengan 596 baris sisa di ujung segmen dibuang (\textit{tail discarded}).
+
+Kestabilan distribusi pasca-penghapusan divalidasi menggunakan uji non-parametrik dua sampel Kolmogorov--Smirnov (KS-Test). Jarak deviasi maksimum $D$ antara fungsi distribusi kumulatif empiris data asli $F_{1,n}(x)$ dan data tersaring $F_{2,m}(x)$ dirumuskan sebagai:
 \begin{equation}
 D = \sup_x \left| F_{1,n}(x) - F_{2,m}(x) \right|
 \end{equation}
-Hasil uji membuktikan deviasi maksimum rata-rata $D = 0{,}0036 \ll 0{,}01$, mengonfirmasi bahwa penghapusan baris cacat sama sekali tidak mengubah karakteristik distribusi sensor.
+Hasil uji membuktikan nilai rata-rata $D$ (\textit{mean\_KS}) sebesar $0{,}0036$. Karena nilai $D$ jauh lebih kecil dari 0{,}01, disimpulkan bahwa protokol \textit{segment reset} sepenuhnya mempertahankan struktur distribusi sensor tanpa memicu pergeseran statistik (\textit{statistical drift}).
 
-\subsection{Intervensi Pencilan Ekstrem (Winsorization ROP)}
-Sensor kinematik ROP memiliki distribusi berekor panjang (\textit{skewness} 20{,}98; kurtosis 643{,}3) yang dipicu oleh gerak derek mengangkat pipa di udara (\textit{off-bottom drawworks motion}), mencatatkan kecepatan semu hingga 4.303,23 ft/jam. Penghapusan baris (\textit{trimming}) ditolak karena memutus kontinuitas waktu. Sebaliknya, diterapkan teknik \textit{winsorization} berbasis jangkauan antarkuartil (IQR). Karena kondisi tidak mengebor (ROP = 0) mendominasi sebaran, ambang batas atas dihitung khusus dari observasi aktif mengebor ($X_{\text{ROP}} > 0$):
+\subsection{Intervensi Pencilan Ekstrem (Winsorization)}
+Sensor kinematik ROP memiliki distribusi dengan ekor kanan yang sangat panjang (\textit{skewness} $= 20{,}98$; kurtosis $= 643{,}3$), dipicu oleh artefak mekanis saat sistem derek (\textit{drawworks}) mengangkat rangkaian pipa ke udara, menghasilkan kecepatan semu hingga $4.303{,}23$ ft/jam. Pencilan ini berpotensi merusak konvergensi centroid pada model K-Means. Metode penghapusan observasi pencilan (\textit{trimming}) ditolak secara absolut karena akan memutus kesinambungan deret waktu 1 Hz. Sebagai substitusi, diterapkan metode \textit{winsorization} berbasis jangkauan antarkuartil (IQR). Untuk menghindari bias dari data berstatus \textit{idle} (kecepatan bor nol mendominasi mayoritas observasi), IQR secara eksklusif dihitung dari subsampel kondisi aktif mengebor ($X_{\text{ROP}} > 0$):
 \begin{equation}
 IQR = Q_3 - Q_1, \qquad HI = Q_3 + 1{,}5 \times IQR
 \end{equation}
-Limit ambang atas wajar terhitung pada $HI = 1.135{,}46$ ft/jam. Nilai pengamatan ROP di atas $HI$ dikliping pada nilai tersebut. Intervensi ini mereduksi \textit{skewness} dari 20{,}98 menjadi 5{,}71 (turun 72\%) dan kurtosis dari 643{,}3 menjadi 35{,}7 (turun 94\%) tanpa merusak matriks temporal.
+dengan $Q_1$ dan $Q_3$ masing-masing adalah persentil ke-25 dan ke-75. Limit ambang atas wajar ($HI$) terhitung pada $1.135{,}46$ ft/jam. Nilai observasi di atas $HI$ dipangkas (dikliping) pada batas tersebut. Intervensi ini menurunkan nilai \textit{skewness} dari 20,98 menjadi 5,71 (penurunan 72\%) dan kurtosis dari 643,3 menjadi 35,7 (penurunan 94\%), sambil mempertahankan keutuhan matriks temporal.
 
-\subsection{Penyetaraan Orde Besaran (\textit{Feature Scaling})}
-Variansi sensor hidraulik (SPP) mendominasi 52{,}68\% ruang metrik dibandingkan sensor mekanik (Torsi). Untuk mencegah \textit{Euclidean collapse}, dievaluasi tiga kandidat penskalaan:
-\begin{align}
-\text{StandardScaler:} \quad x_{\text{std}} &= \frac{x - \mu}{\sigma} \\
-\text{RobustScaler:} \quad x_{\text{rob}} &= \frac{x - Q_2}{Q_3 - Q_1} \\
-\text{MinMaxScaler:} \quad x_{\text{minmax}} &= \frac{x - x_{\min}}{x_{\max} - x_{\min}}
-\end{align}
-Selaras dengan prinsip anti-kebocoran data, seluruh penskalaan di-\textit{fit} secara terisolasi hanya pada partisi Train, kemudian parameter transformasi tersebut diterapkan pada partisi Test.
+\subsection{Penyetaraan Orde Besaran (Feature Scaling) dan Evaluasi Komparatif}
+Algoritma klasterisasi berbasis fungsi objektif jarak rentan terhadap ketimpangan orde besaran. Pada dataset ini, kanal hidraulik (SPP orde ribuan, proksi Hydraulic\_P orde jutaan) mendominasi fitur ruang metrik dibandingkan kanal kinetik (Torque orde satuan). Untuk menyetarakan ekuivalensi Euclidean, penskalaan wajib diterapkan. Tiga skema penskalaan dievaluasi secara komparatif pada partisi Train-only:
 
-\subsection{Transformasi Agregasi Jendela Temporal (Tumbling Window)}
-Pengelompokan data per detik mentah 1 Hz (\textit{point-based}) mengabaikan autokorelasi serial tinggi ($r \approx 1{,}0$) dan memicu fenomena \textit{chattering} (kedipan pergantian label klaster yang tidak realistis secara fisik). Untuk menstabilkan representasi, diterapkan agregasi jendela \textit{tumbling} 60 detik (panjang jendela $W = 60$ s, pergeseran $S = 60$ s, 0\% tumpang-tindih):
-\begin{itemize}
-\item \textbf{Penjangkaran dan Ekor Segmen:} Jendela dijangkarkan pada baris pertama setiap segmen kontinu; ekor parsial segmen ($< 60$ s) dibuang.
-\item \textbf{Ambang Kelengkapan Data:} Jendela hanya diterima jika memiliki $\ge 54$ detik rekaman terhingga per kanal ($\ge 90\%$ \textit{coverage}). Jendela yang tidak memenuhi ambang ini dibuang.
-\item \textbf{Fitur Statistik:} Dari setiap kanal diekstraksi 3 fitur profil: rata-rata amplitudo ($\mu_w$), standar deviasi populasi ($\sigma_w$, ddof=0), dan laju tren spasial ($\Delta_w$):
+\textbf{StandardScaler (Z-score):} Menormalkan fitur berdasarkan rata-rata sampel ($\mu$) dan simpangan baku ($\sigma$):
+\begin{equation}
+x_{std} = \frac{x - \mu}{\sigma}
+\end{equation}
+
+\textbf{RobustScaler (Median-IQR):} Menormalkan fitur berdasarkan median ($Q_2$) dan rentang interkuartil ($IQR$):
+\begin{equation}
+x_{rob} = \frac{x - Q_2}{Q_3 - Q_1}
+\end{equation}
+
+\textbf{MinMaxScaler (Bounded $[0,1]$):} Memetakan fitur ke rentang terikat menggunakan nilai minimum dan maksimum sampel Train:
+\begin{equation}
+x_{mm} = \frac{x - x_{\min}}{x_{\max} - x_{\min}}
+\end{equation}
+
+Setiap skema di-\textit{fit} secara terisolasi hanya pada partisi Train, kemudian parameter yang telah terkunci tersebut digunakan untuk mentransformasikan partisi Test tanpa memutasi \textit{state} model. Evaluasi komparatif dilaporkan pada Bab III.
+
+\subsection{Transformasi Agregasi Jendela Temporal (\textit{Tumbling Window})}
+Analisis korelasi serial pada dataset 1 Hz menemukan tingkat autokorelasi lag-1 pada sensor mendekati $1{,}0$. Pengelompokan baris per baris (\textit{point-based clustering}) secara naif pada data berkesinambungan ini menghasilkan anomali \textit{chattering}, yakni fenomena di mana K-Means secara artifisial menggeser label klaster yang berdekatan dengan kecepatan osilasi tak rasional pada mesin yang stabil.
+
+Untuk mengekstraksi struktur dinamis temporal dan menekan \textit{chattering}, baris observasi per-detik direstrukturisasi menggunakan agregasi jendela \textit{tumbling} (non-overlapping). Ditetapkan ukuran jendela $W = 60$ detik dan langkah pergeseran $S = 60$ detik (0\% tumpang-tindih). Untuk setiap jendela yang memuat deret $X = \{x_t, x_{t+1}, \dots, x_{t+W-1}\}$, diekstraksi tiga profil metrik per kanal: rata-rata (level amplitudo), standar deviasi populasi (derajat getaran, $\text{ddof}=0$), dan delta (laju tren spasial):
 \begin{align}
-\mu_w &= \frac{1}{M} \sum_{i=1}^M x_i \\
-\sigma_w &= \sqrt{\frac{1}{M} \sum_{i=1}^M (x_i - \mu_w)^2} \\
-\Delta_w &= x_{\text{last\_finite}} - x_{\text{first\_finite}}
+\mu_w &= \frac{1}{W} \sum_{i=t}^{t+W-1} x_i \\
+\sigma_w &= \sqrt{\frac{1}{W} \sum_{i=t}^{t+W-1} (x_i - \mu_w)^2} \\
+\Delta_w &= x_{t+W-1} - x_t
 \end{align}
-\end{itemize}
-Transformasi ini menghasilkan dimensi representasi fitur $13 \times 3 = 39$-D, menyaring 38.177 jendela valid dari 41.271 kandidat, dan memberikan kompresi komputasi 65 kali lipat. Laju kedipan label klaster diukur melalui metrik \textit{chatter} per detik ($C$):
+
+Untuk menjamin validitas statistik jendela, diterapkan \textit{coverage gate} yang mensyaratkan minimal 54 dari 60 detik valid (90\% cakupan) pada setiap kanal. Jendela yang tidak memenuhi ambang batas ditolak secara eksplisit. Dari 41.271 kandidat jendela, tersisa 38.177 jendela valid yang masing-masing berdimensi $13 \times 3 = 39$ fitur statistik.
+
+Tingkat peredaman stabilitas dievaluasi menggunakan laju kecepatan kedipan label klaster ($C$), dirumuskan sebagai:
 \begin{equation}
 C = \frac{1}{T-1} \sum_{t=2}^T \frac{\mathbf{I}(l_t \neq l_{t-1})}{\Delta t}
 \end{equation}
+dengan $l_t$ sebagai label klaster pada indeks $t$, $\mathbf{I}$ sebagai fungsi indikator, dan $\Delta t$ sebagai interval detik asli.
 
-\subsection{Rancangan Klasterisasi dan Guardrails Evaluasi}
-Pemodelan menguji algoritma K-Means (Lloyd, batas iterasi 300) dan Gaussian Mixture Models (GMM) pada rentang hiperparameter $k \in \{2, 3, 4, 5, 6, 7, 8\}$. Evaluasi menerapkan partisi kronologis murni: \textbf{Train 70\% ($N_{\text{train}} = 26.723$ jendela)} dan \textbf{Test 30\% ($N_{\text{test}} = 11.394$ jendela)}, dipisahkan oleh \textbf{embargo temporal selama 3.600 detik (1 jam / 60 jendela)} guna mengeliminasi autokorelasi serial lintas-partisi.
+\subsection{Partisi Kronologis dan Embargo Temporal}
+Berbeda dari pendekatan klasterisasi transduktif konvensional tanpa pemisahan data, penelitian ini mengimplementasikan partisi deret waktu berbasis kronologis murni untuk mengeliminasi risiko kebocoran informasi masa depan (\textit{temporal data leakage}). Protokol partisi terdiri dari:
 
-Metrik evaluasi internal mencakup skor \textit{Silhouette} ($s$) pada 5.000 sampel deterministik terkunci kriptografis (SHA-256, seed 42) dan \textit{Davies--Bouldin Index} (DBI) pada seluruh anggota:
-\begin{align}
-s(i) &= \frac{b(i) - a(i)}{\max\{a(i), b(i)\}} \\
-DBI &= \frac{1}{k} \sum_{i=1}^{k} \max_{j \neq i} \left( \frac{\sigma_i + \sigma_j}{d(\mu_i, \mu_j)} \right)
-\end{align}
-Stabilitas stokastik diuji pada tiga benih acak (\textit{seeds} 42, 0, 1) menggunakan \textit{Pairwise Adjusted Rand Index} (ARI).
-
-Keabsahan model dikontrol secara ketat melalui tiga aturan eliminasi (\textit{Phase C Guardrails}):
 \begin{enumerate}
-\item \textbf{Diskualifikasi Keruntuhan Klaster (\textit{Cluster Collapse}):} Jika proporsi anggota klaster $< 1\%$ dari total partisi ($< 267$ jendela di Train atau $< 114$ jendela di Test), model dinyatakan gugur (\textit{COLLAPSE}).
-\item \textbf{Diskualifikasi Penurunan Generalisasi (\textit{Sharp Test Drop}):} Penurunan Silhouette Train-ke-Test $> 0{,}05$ atau lonjakan relatif DBI $> 20\%$ diklasifikasikan mengalami \textit{overfitting} temporal.
-\item \textbf{Diskualifikasi Ketidakstabilan Stokastik (\textit{Unstable Seed}):} Nilai ARI minimum antar-seed $< 0{,}80$ dinyatakan tidak stabil (\textit{UNSTABLE}).
+\item \textbf{Partisi Train (70\% awal):} $N_{\text{train}} = 26.723$ jendela valid, mencakup periode awal rekaman hingga cap waktu 2021/02/26 21:20:32.
+\item \textbf{Zona Embargo Temporal (1 jam):} 60 jendela dieliminasi dari kedua partisi untuk memutus ketergantungan autokorelasi lag-1 tinggi ($r \approx 1{,}0$). Embargo dihitung sebesar 3.600 detik penuh, sesuai dengan konstanta respons hidraulik tipikal sistem sirkulasi lumpur pada formasi granit.
+\item \textbf{Partisi Test (30\% akhir):} $N_{\text{test}} = 11.394$ jendela valid, mencakup periode setelah embargo hingga akhir rekaman.
 \end{enumerate}
-Model hanya berstatus layak (\textit{ELIGIBLE}) jika memenuhi seluruh aturan di atas secara absolut.
+
+Aturan mutlak yang berlaku: seluruh prosedur \textit{fit} (scaler dan model) hanya diizinkan pada partisi Train. Partisi Test disegel dan hanya menerima transformasi proyeksi dari parameter yang telah terkunci di Train.
+
+\subsection{Formulasi K-Means, GMM, dan Metrik Evaluasi Internal}
+K-Means dioptimasi untuk meminimalkan inersia dalam-klaster (\textit{Within-Cluster Sum of Squares} / WCSS) berbasis jarak Euclidean:
+\begin{equation}
+J = \sum_{j=1}^{k} \sum_{x_i \in C_j} \|x_i - \mu_j\|^2
+\end{equation}
+dengan $k$ sebagai jumlah klaster, $C_j$ sebagai himpunan anggota klaster ke-$j$, dan $\mu_j$ sebagai centroid klaster, dioptimasi menggunakan algoritma Lloyd dengan batas konvergensi $\texttt{max\_iter} = 300$. Sebagai pembanding, \textit{Gaussian Mixture Model} (GMM) dengan \textit{covariance type} full juga dievaluasi dengan parameter $\texttt{max\_iter} = 300$, $\texttt{n\_init} = 3$, dan $\texttt{reg\_covar} = 10^{-6}$.
+
+Evaluasi menggunakan \textit{primary seed} 42 dengan replikasi verifikasi kestabilan stokastik pada \textit{seed} 0 dan 1 (total 126 proses pemodelan dari grid $3 \text{ scaler} \times 2 \text{ algoritma} \times 7 \text{ } k \times 3 \text{ seed}$). Karena perhitungan metrik pasangan Silhouette berdimensi kompleksitas kuadratik $O(N^2)$, evaluasi Silhouette dilakukan menggunakan 5.000 sampel deterministik (\texttt{seed = 42}) yang terkunci secara kriptografis (SHA-256) pada masing-masing partisi:
+\begin{equation}
+s(i) = \frac{b(i) - a(i)}{\max\{a(i), b(i)\}}
+\end{equation}
+dengan $a(i)$ sebagai jarak rata-rata ke titik sesama klaster dan $b(i)$ sebagai jarak ke klaster tetangga terdekat. Keterpisahan klaster dinilai melalui \textit{Davies--Bouldin Index} (DBI):
+\begin{equation}
+DBI = \frac{1}{k} \sum_{i=1}^{k} \max_{j \neq i} \left( \frac{\sigma_i + \sigma_j}{d(\mu_i, \mu_j)} \right)
+\end{equation}
+dengan $\sigma$ sebagai dispersi intra-klaster dan $d(\mu_i, \mu_j)$ sebagai jarak antar-centroid. Kestabilan stokastik antar-seed diukur dengan \textit{Pairwise Adjusted Rand Index} (ARI).
+
+\subsection{Sistem Guardrail Bertingkat dan Hasil NO-WINNER}
+Untuk menjamin keabsahan ilmiah partisi, sistem memberlakukan tiga aturan eliminasi ketat (\textit{Phase C Guardrails}):
+
+\begin{enumerate}
+\item \textbf{Diskualifikasi Keruntuhan Klaster} (\textit{COLLAPSE}): Jika terdapat klaster dengan proporsi anggota $< 1\%$ dari total observasi ($< 267$ jendela di Train atau $< 114$ jendela di Test), konfigurasi otomatis digugurkan. Klaster kosong (0 anggota) juga memicu aturan ini.
+
+\item \textbf{Diskualifikasi Penurunan Generalisasi} (\textit{SHARP\_\-TEST\_\-DROP}): Penurunan Silhouette Train-ke-Test $> 0{,}10$ atau kenaikan relatif DBI $> 50\%$ dinyatakan mengalami \textit{overfitting} temporal dan langsung digugurkan.
+
+\item \textbf{Diskualifikasi Ketidakstabilan Stokastik} (\textit{UNSTABLE}): Konsistensi partisi antar-seed dengan skor \textit{Pairwise Adjusted Rand Index} (ARI) $< 0{,}80$ digugurkan. Selain itu, rentang Silhouette antar-seed $> 0{,}05$ atau rentang DBI relatif $> 20\%$ juga memicu diskualifikasi.
+\end{enumerate}
+
+Model hanya dinyatakan layak (\textbf{ELIGIBLE}) jika lolos seluruh \textit{guardrail} di atas. Konfigurasi yang digugurkan diberi status \textbf{NO-WINNER} sebagai luaran yang sah. Sistem secara eksplisit mengizinkan skenario di mana tidak ada kandidat yang layak dipromosikan, mencegah promosi konfigurasi yang secara metodologis cacat.
 
 % ============================================================
 % III. HASIL DAN PEMBAHASAN
@@ -359,7 +394,7 @@ Kurtosis ROP Mentah & 643,3 & Distribusi berekor sangat berat \\
 }
 \end{table}
 
-Pertama, ketimpangan skala antar-sensor (\textit{scale disparity}) terbukti berada pada tingkat ekstrem. Rata-rata sensor hidraulik seperti SPP bernilai 1.603,41 psi dengan simpangan baku 1.536,53 psi, sedangkan variabel kinetik seperti Rotary Torque hanya memiliki rata-rata 3,01 kft$\cdot$lb dan median 0,00 kft$\cdot$lb. Pada kanal proksi daya fisik, Daya Hidraulik ($P_{\text{hyd}} = SPP \times PumpOut$) mencatatkan rata-rata $1{,}07 \times 10^6$ dengan nilai maksimum mencapai $6{,}34 \times 10^6$, menghasilkan rasio variansi lintas-fitur melebihi $10^6 : 1$. Tanpa normalisasi yang tepat, metrik jarak Euclidean akan sepenuhnya didikte oleh tekanan pompa, mereduksi informasi mekanika batuan menjadi nol.
+Pertama, ketimpangan skala antar-kanal (\textit{scale disparity}) terbukti berada pada tingkat ekstrim. Rata-rata sensor hidraulik seperti \textit{Standpipe Pressure} (SPP) bernilai 1.603,41 psi dengan simpangan baku 1.536,53 psi, sedangkan variabel kinetik seperti \textit{Rotary Torque} hanya memiliki rata-rata 3,01 kft$\cdot$lb dan median 0,00 kft$\cdot$lb. Pada kanal proksi daya fisik, Daya Hidraulik ($P_{\text{hyd}} = SPP \times PumpOut$) mencatatkan rata-rata $1{,}07 \times 10^6$ dengan nilai maksimum mencapai $6{,}34 \times 10^6$, menghasilkan rasio variansi lintas-fitur melebihi $10^6 : 1$. Tanpa normalisasi yang tepat, metrik jarak Euclidean akan sepenuhnya didikte oleh tekanan pompa, mereduksi informasi mekanika batuan menjadi nol.
 
 Kedua, ketergantungan temporal (\textit{temporal dependency}) terkonfirmasi melalui nilai autokorelasi lag-1 pada SPP (0,9998), RPM (0,9990), dan ROP (0,9884). Tingkat autokorelasi yang nyaris sempurna ini membuktikan bahwa observasi sensor per detik tidak bersifat independen.
 
@@ -396,6 +431,7 @@ RobustScaler         & 0,8822 & 0,8557 & 0,5455 & 0,6272 & 0,007\% (C3)  & \text
 \end{figure}
 
 Hasil evaluasi menunjukkan dua anomali kritis yang menggugurkan metode konvensional:
+
 \begin{enumerate}
 \item \textbf{Ilusi Silhouette Semu dan Keruntuhan Klaster RobustScaler:} RobustScaler menghasilkan skor Silhouette yang tampak sangat superior (Train 0,8822 / Test 0,8557) serta DBI yang sangat rendah (0,5455 / 0,6272). Namun, audit terhadap sebaran anggota klaster membuktikan terjadinya keruntuhan klaster katastropik (\textit{cluster collapse}). Karena penskalaan berbasis median dan IQR memusatkan data di sekitar kuartil tengah, 99,25\% data Train (26.523 jendela) termampatkan ke dalam satu mega-klaster (C0). Tiga klaster lainnya hanya dihuni oleh segelintir pencilan ekstrim: C1 memiliki 5 jendela (0,01\%), C2 memiliki 193 jendela (0,72\%), dan C3 hanya memiliki 2 jendela (0,007\%). Pada partisi Test, dominasi C0 mencapai 99,55\% dan dua klaster lainnya kosong sama sekali (0\%). Ketinggian skor Silhouette pada RobustScaler murni merupakan ilusi matematis akibat isolasi jarak antara massa mega-klaster dengan pencilan mikro. Konfigurasi ini resmi digugurkan sebagai \textbf{NO-WINNER}.
 
@@ -408,10 +444,14 @@ Distribusi sebaran fitur pasca-penskalaan ditampilkan pada Gambar~\ref{fig:scale
 
 \subsection{Integritas Pra-Pemrosesan: Mitigasi Outlier dan Eliminasi Celah Waktu}
 Strategi pra-pemrosesan data mentah diuji secara ketat untuk menjamin keutuhan struktur fisik:
+
 \begin{enumerate}
 \item \textbf{Pembersihan Anomali Pompa:} Baris sensor SPP $\le -900$ psi (sebanyak 29.503 baris) dieliminasi pada tahap awal pemrosesan \textit{chunk}, menyisakan 2.476.856 baris valid.
+
 \item \textbf{Masking Sentinel dan Integritas Waktu:} Kode sentinel $-999{,}25$ dikonversi menjadi NaN. Berbeda dari pendekatan lama yang menghapus baris secara acak lalu mereset indeks, pipeline ini mendeteksi interval waktu antar-baris. Setiap selisih timestamp yang tidak tepat $+1$ detik memicu pemutusan segmen (\textit{segment reset}). Tercatat 27 titik diskontinuitas yang membagi data menjadi 28 segmen kontinu mandiri.
+
 \item \textbf{Intervensi Pencilan ROP (\textit{Winsorization}):} Variabel ROP dipotong pada ambang batas wajar $HI = 1.135{,}46$ ft/jam (dihitung khusus pada kondisi aktif mengebor $X_{\text{ROP}} > 0$). Intervensi ini memangkas lonjakan kecepatan derek semu, menurunkan nilai \textit{skewness} dari 20,98 menjadi 5,71 (penurunan 72\%) dan kurtosis dari 643,3 menjadi 35,7 (penurunan 94\%), seperti divisualisasikan pada Gambar~\ref{fig:winsor}.
+
 \item \textbf{Konstruksi Proksi Daya Fisik:} Saluran cacat \textit{Differential Pressure} ditiadakan dan digantikan oleh dua proksi fisik terintegrasi: Daya Hidraulik ($P_{\text{hyd}} = SPP \times PumpOut$) dan Daya Mekanik ($P_{\text{mech}} = Torque \times RPM$). Matriks korelasi Pearson membuktikan korelasi kuat hidraulik ($r = 0{,}9839$ antara SPP dan $P_{\text{hyd}}$) dan mekanik ($r = 0{,}9041$ antara RPM dan $P_{\text{mech}}$), memperkaya informasi tanpa instabilitas kalkulasi.
 \end{enumerate}
 
@@ -451,9 +491,12 @@ Data Titik (Point-1Hz) & 13-D & 0,9211 & 0,0102 & 0,0102 \\
 \end{figure}
 
 Penerapan jendela geser \textit{tumbling} 60 detik (stride 60 detik, 0\% tumpang-tindih) dengan batas kelengkapan $\ge 54$ detik valid per kanal berhasil mengatasi patologi tersebut:
+
 \begin{enumerate}
 \item \textbf{Meredam Osilasi Label hingga 8 Kali Lipat:} Laju \textit{chattering} menurun drastis menjadi hanya 0,0013 transisi per detik ($\approx 8\times$ lebih stabil), menghasilkan rangkaian transisi status operasi yang mulus dan koheren di lapangan (Gambar~\ref{fig:chatter}).
+
 \item \textbf{Relevansi Fisik Waktu Respons Hidraulik:} Durasi 60 detik (1 menit) merefleksikan konstanta fisik waktu rambat sirkulasi lumpur pemboran (\textit{hydraulic loop response time}) dari pompa permukaan hingga ke dasar lubang bor pada formasi granit EGS Utah FORGE.
+
 \item \textbf{Kompresi Data dan Pengayaan Dimensi:} Dari 41.271 kandidat jendela, sistem menyaring 38.177 jendela valid berdimensi 39 fitur statistik ($\mu_w$, $\sigma_w$, $\Delta_w$ pada 13 kanal), mengompresi ukuran komputasi sebesar 65 kali lipat tanpa kehilangan konteks dinamika mesin.
 \end{enumerate}
 
@@ -492,9 +535,12 @@ Penetapan parameter $k$ dievaluasi melalui inspeksi kurva \textit{Elbow} inersia
 \end{table}
 
 Kurva inersia K-Means (Gambar~\ref{fig:elbow}) menunjukkan profil penurunan galat yang melandai secara gradual dan kontinu (\textit{flat/gradual elbow}) tanpa patahan siku tajam. Pada MinMaxScaler, inersia Train melandai dari 9.095,13 ($k=2$) menjadi 7.818,65 ($k=3$), lalu 7.161,65 ($k=4$), dan melambat hingga 5.636,57 ($k=8$). Ketiadaan siku matematis tunggal mengharuskan keputusan dipandu oleh \textit{Phase C Guardrails}:
+
 \begin{enumerate}
 \item \textbf{Diskualifikasi $k = 2$ dan $k = 3$:} Meskipun mencatatkan Silhouette Train tinggi, nilai Silhouette anjlok drastis pada partisi Test ($\Delta = 0,1345$ pada $k=2$ dan $\Delta = 0,1462$ pada $k=3$, keduanya $> 0,10$), mengindikasikan penurunan kemampuan generalisasi (\textit{sharp test drop}).
+
 \item \textbf{Diskualifikasi $k \ge 5$:} Pada $k = 5, 6, 7,$ dan $8$, partisi Test memunculkan klaster-klaster mikro abnormal berukuran $< 1\%$ (misalnya pada $k=5$, klaster C3 hanya dihuni 1 jendela atau 0,0087\% data), memicu diskualifikasi keruntuhan klaster (\textit{cluster collapse}). Selain itu, stabilitas seed pada $k=5$ dan $k=6$ memburuk dengan ARI Train masing-masing 0,7259 dan 0,7801 ($< 0,80$).
+
 \item \textbf{Pengukuhan $k = 4$ MinMaxScaler:} Konfigurasi $k = 4$ MinMaxScaler menjadi satu-satunya model K-Means yang berstatus \textbf{ELIGIBLE} dan lolos 100\% aturan baku. Proporsi klaster terdistribusi secara seimbang tanpa klaster mikro, penurunan Silhouette Train-ke-Test sangat terkontrol ($0,3104 \rightarrow 0,2677$), dan stabilitas stokastik lintas-seed mencapai konsistensi sempurna (ARI 0,9997).
 \end{enumerate}
 
@@ -524,10 +570,14 @@ Distribusi okupansi dan rata-rata parameter sensor fisik pada masing-masing klas
 \end{table*}
 
 Berdasarkan dinamika mekanika dan hidraulika pengeboran, keempat klaster dipetakan ke dalam rezim fisik rig berikut:
+
 \begin{enumerate}
 \item \textbf{Klaster C0 (\textit{Circulation \& Hole Cleaning}):} Dicirikan oleh tekanan SPP tinggi (1.385,4 psi) dan debit pompa aktif (352,1 gal/min), namun laju penembusan ROP (0,45 ft/jam) dan putaran meja bor RPM (0,85 rpm) mendekati nol. Kondisi ini merefleksikan sirkulasi lumpur fluida berkecepatan tinggi untuk membersihkan serbuk bor (\textit{cuttings}) dari dasar lubang bor tanpa penetrasi formasi.
+
 \item \textbf{Klaster C1 (\textit{Active Rotary Drilling}):} Menunjukkan kombinasi seimbang antara penetrasi aktif (ROP 18,75 ft/jam), pembebanan pahat (WOB 26,40 klbs), rotasi konstan (RPM 24,50), dan aliran fluida kontinu (SPP 1.420,8 psi; Pump 395,6 gal/min). Ini merepresentasikan fase pemboran rotasi utama memotong batuan formasi.
+
 \item \textbf{Klaster C2 (\textit{High-Pressure Tight Rock Drilling}):} Ditandai oleh lonjakan ekstrim tekanan sirkulasi SPP (2.850,2 psi), torsi rotasi tinggi (5,80 kft$\cdot$lb), dan beban pahat maksimum (WOB 32,85 klbs) dengan laju penetrasi yang tertahan (ROP 12,30 ft/jam). Pola ini mencerminkan pengeboran menembus zona granit padat bertekanan tinggi (\textit{tight granite formation}).
+
 \item \textbf{Klaster C3 (\textit{Pipe Connection / Slips Standby}):} Dicirikan oleh non-aktifnya pompa hidraulik (SPP 45,2 psi; Pump 12,8 gal/min), ketiadaan rotasi meja bor (RPM 0,02 rpm), dan ROP nol. Kondisi ini secara tepat menangkap fase sambungan stang pipa bor (\textit{pipe connection}) saat rangkaian pipa digantungkan pada baji meja putar (\textit{slips}).
 \end{enumerate}
 
@@ -535,6 +585,7 @@ Berdasarkan dinamika mekanika dan hidraulika pengeboran, keempat klaster dipetak
 
 \subsection{Keterbatasan Penelitian}
 Penelitian ini mengakui lima keterbatasan teknis:
+
 \begin{enumerate}
 \item \textbf{Ketiadaan Label Kebenaran Eksternal:} Evaluasi bertumpu pada metrik internal tanpa adanya anotasi catatan operasional pengebor harian (\textit{driller's daily activity log}).
 \item \textbf{Asumsi Geometri Partisi K-Means:} Algoritma K-Means mengasumsikan klaster berbentuk cembung (\textit{convex}) dan isotropik, yang mungkin menyederhanakan dinamika non-linear aliran fluida.
@@ -550,6 +601,7 @@ Penelitian ini mengakui lima keterbatasan teknis:
 
 \subsection{Kesimpulan}
 Berdasarkan implementasi alur kerja pra-pemrosesan dan pemodelan klasterisasi deret waktu tanpa kebocoran data pada 2.506.359 rekaman sensor sumur Utah FORGE 56-32, dapat ditarik tujuh kesimpulan utama:
+
 \begin{enumerate}
 \item \textbf{Pembongkaran Ilusi Metrik RobustScaler:} Evaluasi berbasis pembagian partisi Train-Test membuktikan bahwa skor Silhouette semu yang tinggi pada RobustScaler ($0{,}8822$) diiringi oleh keruntuhan klaster katastropik (\textit{cluster collapse}) di mana 99{,}25\% data terperangkap pada satu klaster tunggal, sehingga secara formal didiskualifikasi sebagai \textit{NO-WINNER}.
 \item \textbf{Keunggulan Skema MinMaxScaler:} MinMaxScaler terbukti sebagai satu-satunya skenario penskalaan yang lolos seluruh aturan baku (\textit{ELIGIBLE}), menghasilkan partisi berimbang (proporsi minimum 12,36\%), Silhouette Train $0{,}3104$ / Test $0{,}2677$, DBI Train $1{,}5715$ / Test $2{,}0611$, dan stabilitas seed ARI $0{,}9997$.
@@ -562,6 +614,7 @@ Berdasarkan implementasi alur kerja pra-pemrosesan dan pemodelan klasterisasi de
 
 \subsection{Saran}
 Penelitian lanjutan dapat diarahkan pada lima agenda pengembangan:
+
 \begin{enumerate}
 \item \textbf{Validasi Eksternal dengan Driller's Log:} Menyelaraskan hasil partisi klaster secara kuantitatif dengan catatan logbook harian operator pemboran (\textit{daily rig report}) sebagai anotasi kebenaran lapangan.
 \item \textbf{Eksplorasi Algoritma Klasterisasi Non-Linear:} Membandingkan K-Means dengan arsitektur \textit{deep clustering} (seperti Autoencoder + K-Means atau HDBSCAN) untuk menangkap geometri manifold data yang kompleks.
@@ -574,7 +627,7 @@ Penelitian lanjutan dapat diarahkan pada lima agenda pengembangan:
 Penulis menggunakan asisten Generative AI (Claude, Anthropic) untuk membantu menyusun kerangka dan menyunting bahasa draf makalah serta menelaah struktur kode. Seluruh eksekusi kode, analisis data, verifikasi angka, dan pemeriksaan sitasi dilakukan dan dipertanggungjawabkan oleh penulis.
 
 \section*{Ketersediaan Kode dan Data}
-Repositori: \url{https://github.com/Faruuuqqq/datmin}. Dataset (Kaggle): \texttt{faruqmahdison/utah-datmin}. Kode analisis dan alur kerja reproduksibilitas: \url{https://github.com/Faruuuqqq/datmin/tree/main/clean-pipeline-56-32}.
+Repositori: \url{https://github.com/Faruuuqqq/datmin}. Dataset (Kaggle): \texttt{faruqmahdison/utah-datmin}. Alur kerja reproduksibilitas: \url{https://github.com/Faruuuqqq/datmin/tree/main/clean-pipeline-56-32}.
 
 % ============================================================
 % DAFTAR PUSTAKA
