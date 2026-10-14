@@ -95,7 +95,7 @@ Untuk merumuskan strategi penanganan data (\textit{data preprocessing}) yang opt
 \item \textbf{Identifikasi:} Pencarian awal pada basis data akademik Scopus menggunakan kueri resmi empat blok menghasilkan 740 dokumen. Setelah penyaringan rentang publikasi 2021--2026, diperoleh 409 dokumen potensial.
 \item \textbf{Penyaringan:} Menyaring duplikasi dan dokumen non-artikel serta artikel non-bahasa Inggris (178 dokumen dieksklusi), menyisakan 231 artikel jurnal berbahasa Inggris. Dari jumlah tersebut, 104 artikel tidak dapat diakses teks penuh secara institusional.
 \item \textbf{Uji Kelayakan:} Sebanyak 127 artikel teks penuh (\textit{full-text}) dievaluasi secara mendalam. Sebanyak 118 dokumen dieksklusi karena ketidaksesuaian domain fisik operasional (seperti analisis regangan seismik gempa bumi, emisi akustik skala lab murni, atau analisis reservoir berlabel terawasi tanpa klasterisasi deret waktu sensor 1 Hz).
-\item \textbf{Inklusi:} Menetapkan sembilan literatur acuan utama yang paling selaras secara metodologis menjadi landasan penelitian, dengan delapan studi acuan dievaluasi secara komparatif mendalam.
+\item \textbf{Inklusi:} Menetapkan sembilan literatur acuan utama yang paling selaras secara metodologis menjadi landasan penelitian dan dievaluasi secara komparatif mendalam.
 \end{enumerate}
 
 \begin{figure}[!t]
@@ -106,93 +106,43 @@ Untuk merumuskan strategi penanganan data (\textit{data preprocessing}) yang opt
 \end{figure}
 
 \subsection{Analisis Kesenjangan (\textit{Gap Analysis})}
-Delapan literatur utama hasil seleksi PRISMA dikaji untuk memetakan arsitektur pemrosesan dan algoritma klasterisasi yang diterapkan pada data industri. Untuk mempertajam posisi kontribusi makalah ini, perbandingan dilakukan pada tujuh sumbu analisis kritis: domain dan objek data, granularitas dan volume, penanganan ketimpangan skala, preservasi temporal, penanganan outlier dan nilai sentinel, metode klasterisasi dan optimasi, serta interpretasi semantik klaster. Ringkasan komparatif disajikan pada Tabel~\ref{tab:gap1} dan Tabel~\ref{tab:gap2}.
+Sembilan literatur utama hasil seleksi PRISMA dikaji untuk memetakan arsitektur pemrosesan dan algoritma klasterisasi yang diterapkan pada data industri. Untuk mempertajam posisi kontribusi makalah ini, ringkasan perbandingan komparatif terhadap penelitian yang diajukan disajikan pada Tabel~\ref{tab:gap1}.
 
 \begin{table*}[!t]
-\caption{Analisis Kesenjangan Riset --- Bagian I: Domain, Granularitas, Skala, dan Temporal}
+\caption{Tabel Gap Analysis Literatur Terhadap Penelitian Ini (PRISMA 2020)}
 \label{tab:gap1}
 \centering
-\footnotesize
-\renewcommand{\arraystretch}{1.35}
-\setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.7cm} X X X X X@{}}
+\scriptsize
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.3cm} X X X X@{}}
 \toprule
-\textbf{Sumbu Analisis} & \textbf{Abrasaldo \textit{et al.} (2026) [1]} & \textbf{Li \textit{et al.} (2026) [2]} & \textbf{Wang \textit{et al.} (2026) [3]} & \textbf{Bayazitova \textit{et al.} (2024) [5]} & \textbf{Kontribusi Makalah Ini} \\
+\textbf{Penelitian} & \textbf{Karakteristik Data} & \textbf{Preprocessing} & \textbf{Metode Klasterisasi} & \textbf{Limitasi \& Gap yang Diselesaikan} \\
 \midrule
-
-\textbf{Domain \& Objek Data} &
-Sensor pembangkit biner geotermal (permukaan). &
-Sensor mekanik pemboran darat (sumur minyak). &
-Profil produksi \& komplesi sumur Permian. &
-Sensor tekanan \& laju alir sumur lepas pantai (3W). &
-\textbf{Pengeboran sumur geotermal suhu tinggi (\textit{granite EGS}) Utah FORGE Well 56-32.} \\
+Abrasaldo \textit{et al.} (2026) \cite{abrasaldo2026} & Data sensor termodinamika PLTP Wairakei (tekanan, temperatur, debit fluida). & Seleksi fitur \textit{self-supervised} (13 dari 1588 fitur \textit{tsfresh}), Z-score. & \textit{Time-series clustering} ($k$-Means, GMM, DBSCAN); Sil ($0{,}66$), DBI ($0{,}40$). & Terbatas pada fasilitas permukaan tunggal; tanpa uji penskalaan (\textit{Robust} vs \textit{Standard}) pada variansi ekstrem sensor pemboran. \\
 \addlinespace
-
-\textbf{Granularitas \& Volume} &
-Data menit/jam tersaring. &
-Data per detik (7.231 baris sampel). &
-Data bulanan agregat (189 sumur). &
-Data aliran ter-\textit{downsample} 1 menit. &
-\textbf{Aliran sensor masif 1 Hz riil (2.506.359 baris kontinu, 29,06 hari).} \\
+Li \textit{et al.} (2026) \cite{li2026} & Sensor pemboran darat 4 sumur (7.231 baris; WOB, RPM, SPP, Torque, Flow, ROP). & Imputasi RF, filter Savitzky-Golay, fusi LOF/$k$-Means, \textit{sliding window}. & $k$-Means + optimasi parameter terarah model HMSE. & Bersifat terarah (\textit{supervised}) dengan sampel kecil; belum memetakan rezim operasional tanpa label pada 2,5 juta baris 1 Hz. \\
 \addlinespace
-
-\textbf{Penanganan Ketimpangan Skala} &
-Standard Z-score tanpa analisis varians antar-sensor. &
-Penskalaan min-max lokal per segmen jendela. &
-Normalisasi global (\textit{StandardScaler}). &
-Standard Z-score global dengan penanganan \textit{missing data}. &
-\textbf{Komparasi empiris tiga skema penskalaan: \textit{StandardScaler}, \textit{RobustScaler}, dan \textit{MinMaxScaler} pada isolasi Train-only, dengan pembongkaran ilusi metrik RobustScaler.} \\
+Wang \textit{et al.} (2026) \cite{wang2026} & Profil produksi 189 sumur Permian Basin (agregasi bulanan). & Normalisasi skala global (\textit{StandardScaler}), MRMR, MDS. & \textit{k-Means}, Hierarchical, GMM; seleksi $k$ via Elbow \& Silhouette. & Menggunakan data agregat bulanan statis; kehilangan dinamika temporal transien dan tidak menangani disparitas varians dinamis 1 Hz. \\
 \addlinespace
-
-\textbf{Preservasi Temporal} &
-Ekstraksi fitur statistik ringkasan statis. &
-Segmentasi \textit{sliding window} berbasis HMSE. &
-Mengabaikan dependensi waktu (analisis titik statis). &
-\textit{Windowing} sekuensial untuk \textit{deep learning}. &
-\textbf{Jendela \textit{tumbling} 60 detik (0\% tumpang-tindih) dengan \textit{reset} adaptif pada celah sampling dan \textit{coverage gate} $\ge 54/60$ detik, dilengkapi partisi kronologis Train/Test dengan embargo temporal 1 jam.} \\
+Bayazitova \textit{et al.} (2024) \cite{bayazitova2024} & Benchmark 3W Petrobras (21 sumur lepas pantai, laju alir/tekanan). & Z-score, forward-fill, \textit{downsampling} 1 menit, sekuensial window 30. & Deep Neural Networks (RF, MLP, BiLSTM) terarah. & Sangat bergantung anotasi label manual pakar; tidak menyediakan solusi klasterisasi murni tanpa label (\textit{unsupervised}). \\
+\addlinespace
+Singh \textit{et al.} (2026) \cite{singh2026} & 12 log sensor trajektori dan parameter mekanik pemboran terarah. & Interpolasi, \textit{quantile normalization}, segmentasi window 50. & Graph Feature Representation + LSTM Autoencoder. & Berfokus pada \textit{depth-domain} dengan komputasi tinggi; rentan \textit{data leakage} temporal dan belum menguji partisional klasik 1 Hz. \\
+\addlinespace
+Mohammed \textit{et al.} (2025) \cite{mohammed2025} & Telemetri sensor paket jaringan kontrol industri migas (ICPS). & Segmentasi \textit{sliding time-window}, deteksi deviasi pola periodik. & STADe, KNN, Isolation Forest, Local Outlier Factor (LOF). & Terbatas pada paket siber kontrol ICPS, bukan parameter fisik interaksi mekanik batuan-lumpur rig pemboran. \\
+\addlinespace
+Azuma \& Hashimoto (2025) \cite{azuma2025} & Deret waktu produksi uap 9 sumur geotermal (14 tahun). & Filter Butterworth, \textit{Lagged Trajectory Matrix Embedding}. & Singular Spectrum Analysis (SSA) deteksi anomali. & Analisis univariat pada satu sensor uap jangka panjang; tidak mengakomodasi korelasi multivariat simultan sensor rig. \\
+\addlinespace
+Qiu \textit{et al.} (2025) \cite{qiu2025} & Deret waktu dinamis produksi sumur minyak lepas pantai. & 3-Sigma Rule + One-Class SVM (OC-SVM) filter outlier transien. & OC-SVM \textit{anomaly detection} \& pemisahan tahapan dinamis. & Diterapkan pada produksi fluida eksploitasi, bukan pemboran granit EGS; mengabaikan protokol \textit{leakage-free chronological split}. \\
+\addlinespace
+Hadiyeva \textit{et al.} (2026) \cite{hadiyeva2026} & $>3$ juta entri agregat harian (2 tahun) sumur migas Kazakhstan. & Normalisasi Z-score, eliminasi pencilan, korelasi fitur. & $k$-Means Clustering, penentuan klaster via Elbow ($k=10$). & Agregasi harian makro tanpa preservasi dependensi temporal 1 Hz; tanpa pencegahan \textit{data leakage} dan rentan bias skala variansi. \\
+\midrule
+\textbf{Penelitian Kita (Well 56-32 Clean Pipeline)} & \textbf{Aliran sensor 1 Hz geotermal granit EGS Utah FORGE 56-32 (2.506.359 baris, 13 kanal, 29,06 hari).} & \textbf{Filter fisik SPP $\le -900$, mask sentinel $-999.25$, tumbling window 60s (stride 60s, reset 8 gap, 38.177 window $\times$ 39 fitur), chronological split 70:30 ber-embargo $\ge 1$ jam, scaler fit Train-only.} & \textbf{\textit{k-Means} \& GMM ($k=2..8$) dievaluasi terpisah Train/Test (Silhouette, DBI, occupancy, collapse check), aturan ketat NO-WINNER, label $C_0..C_k$.} & \textbf{Menyelesaikan gap utama:} (1) Zero data leakage via split kronologis \& fit Train-only; (2) Meredam distorsi varians dominan SPP ($>95\%$); (3) Preservasi temporal 1 Hz bebas chattering; (4) Benchmark objektif tanpa pseudo-regime. \\
 \bottomrule
 \end{tabularx}
 \end{table*}
 
-\begin{table*}[!t]
-\caption{Analisis Kesenjangan Riset --- Bagian II: Outlier, Klasterisasi, dan Interpretasi}
-\label{tab:gap2}
-\centering
-\footnotesize
-\renewcommand{\arraystretch}{1.35}
-\setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.7cm} X X X X X@{}}
-\toprule
-\textbf{Sumbu Analisis} & \textbf{Abrasaldo \textit{et al.} (2026) [1]} & \textbf{Li \textit{et al.} (2026) [2]} & \textbf{Wang \textit{et al.} (2026) [3]} & \textbf{Bayazitova \textit{et al.} (2024) [5]} & \textbf{Kontribusi Makalah Ini} \\
-\midrule
-
-\textbf{Penanganan Outlier \& Sentinel} &
-Filter ambang batas standar pabrik. &
-Imputasi \textit{Random Forest} + Savitzky--Golay. &
-Pembersihan outlier univariat standar. &
-Imputasi \textit{forward-fill} + filter anomali berlabel. &
-\textbf{Pembersihan anomali kanal cacat (SPP $\le -900$ psi; 29.503 baris), \textit{masking} sentinel $-999{,}25$ menjadi NaN tanpa imputasi, serta segmentasi ulang pada celah waktu $\ne +1$ detik.} \\
-\addlinespace
-
-\textbf{Metode Klasterisasi \& Optimasi} &
-K-Means, Agglomerative, DBSCAN. &
-Optimasi parameter bor berbasis K-Means. &
-K-Means, Hierarchical, GMM. &
-Klasifikasi \textit{supervised}: RF, MLP, BiLSTM. &
-\textbf{Grid $3 \times 2 \times 7 \times 3 = 126$ runs (K-Means/GMM $\times$ 3 scaler $\times$ $k=2..8$ $\times$ 3 seed), dengan sistem \textit{guardrail} bertingkat (COLLAPSE, SHARP\_TEST\_DROP, UNSTABLE) dan kebebasan hasil \textit{NO-WINNER}.} \\
-\addlinespace
-
-\textbf{Interpretasi Semantik Klaster} &
-Pemisahan rezim efisiensi penukar panas (\textit{fouling stage}). &
-Rekomendasi parameter bor (WOB-RPM optimum). &
-Tipe profil kurva penurunan laju produksi. &
-Deteksi kejadian berlabel (\textit{slugging}, hidrasi). &
-\textbf{Penemuan 4 rezim operasi rig dengan distribusi berimbang: \textit{Active Rotary Drilling} (34,63\%), \textit{High-Pressure Tight Rock Drilling} (39,94\%), \textit{Circulation \& Hole Cleaning} (13,07\%), \textit{Pipe Connection/Slips Standby} (12,36\%).} \\
-\bottomrule
-\end{tabularx}
-\end{table*}
-
-Berdasarkan Tabel~\ref{tab:gap1} dan Tabel~\ref{tab:gap2}, celah penelitian yang teridentifikasi adalah belum tersedianya studi yang secara sistematis mengevaluasi tahap pra-pemrosesan secara komponen-per-komponen (\textit{step-by-step ablation}) pada klasterisasi deret waktu sensor pengeboran geotermal 1 Hz tanpa label, dengan validasi matematis, protokol anti-kebocoran informasi, dan \textit{guardrail} eliminasi yang terukur pada sumbu-sumbu analisis yang telah dipetakan.
+Berdasarkan Tabel~\ref{tab:gap1}, celah penelitian yang teridentifikasi adalah belum tersedianya studi yang secara sistematis mengevaluasi tahap pra-pemrosesan secara komponen-per-komponen (\textit{step-by-step ablation}) pada klasterisasi deret waktu sensor pengeboran geotermal 1 Hz tanpa label, dengan validasi matematis, protokol anti-kebocoran informasi, dan \textit{guardrail} eliminasi yang terukur pada sumbu-sumbu analisis yang telah dipetakan.
 
 \subsection{Pernyataan Kontribusi}
 Berlandaskan pada tinjauan literatur dan kebutuhan analitis data, makalah ini mengajukan lima kontribusi utama untuk pemodelan deret waktu sensor geotermal tak berlabel:
@@ -657,6 +607,9 @@ K. Azuma and Y. Hashimoto, ``Anomaly detection in geothermal steam production ti
 
 \bibitem{qiu2025}
 L. Qiu \textit{et al.}, ``Data-driven time-series modeling for intelligent extraction of reservoir development indicators,'' \textit{Energies}, vol. 18, no. 21, p. 5753, Nov. 2025.
+
+\bibitem{hadiyeva2026}
+A. S. Hadiyeva, D. A. Aktaukenov, Z. Z. Omirbekova, and E. Pinsky, ``Clustering analysis for predictive maintenance of oil wells in Kazakhstan,'' \textit{SOCAR Proc.}, no. 1, pp. 60--66, 2026.
 
 \bibitem{lloyd1982}
 S. P. Lloyd, ``Least squares quantization in PCM,'' \textit{IEEE Trans. Inf. Theory}, vol. 28, no. 2, pp. 129--137, Mar. 1982.
